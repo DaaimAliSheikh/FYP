@@ -10,7 +10,19 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const venues = await Venue.find();
-    res.json(venues);
+    // Fetch reviews for each venue
+    const venuesWithReviews = await Promise.all(
+      venues.map(async (venue) => {
+        const reviews = await VenueReview.find({
+          venue_id: venue._id,
+        }).populate("user_id", "username email");
+        return {
+          ...venue.toObject(),
+          venue_reviews: reviews,
+        };
+      })
+    );
+    res.json(venuesWithReviews);
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }

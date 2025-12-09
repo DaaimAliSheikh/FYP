@@ -39,15 +39,17 @@ export default function VenueCard({ venue, averageRating }) {
     if (!comment) return;
 
     try {
-      await api.post("/venues/reviews/" + venue.venue_id, {
+      await api.post("/venues/reviews/" + (venue._id || venue.venue_id), {
         venue_rating: value,
         venue_review_text: comment,
       });
       dispatch(fetchVenues());
       setComment("");
       setValue(1);
+      setOpen(false);
     } catch (error) {
       console.error("Failed to submit review:", error);
+      alert(error.response?.data?.detail || "Failed to submit review");
     }
   };
 
@@ -73,7 +75,7 @@ export default function VenueCard({ venue, averageRating }) {
             component="img"
             alt={venue.venue_name}
             height="140"
-            image={`${venue.venue_image}`}
+            image={`http://localhost:8000${venue.venue_image}`}
           />
         )}
         <CardContent>
@@ -185,7 +187,7 @@ export default function VenueCard({ venue, averageRating }) {
               </Typography>
             </AccordionSummary>
             {venue.venue_reviews?.map((review) => (
-              <AccordionDetails key={review.venue_review_id}>
+              <AccordionDetails key={review._id || review.venue_review_id}>
                 <Stack
                   direction="row"
                   justifyContent="space-between"
@@ -193,7 +195,7 @@ export default function VenueCard({ venue, averageRating }) {
                 >
                   <Box>
                     <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-                      {review.user?.username || "Anonymous"}
+                      {review.user_id?.username || "Anonymous"}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       {new Date(

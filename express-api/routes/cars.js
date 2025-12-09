@@ -1,6 +1,10 @@
 const express = require("express");
 const { Car, CarReservation } = require("../models");
-const { authMiddleware, adminMiddleware } = require("../middleware/auth");
+const {
+  authMiddleware,
+  adminMiddleware,
+  carRentalVendorMiddleware,
+} = require("../middleware/auth");
 const { upload } = require("../utils/upload");
 const config = require("../config/env");
 
@@ -48,7 +52,7 @@ router.get("/:car_id", async (req, res) => {
 router.post(
   "/",
   authMiddleware,
-  adminMiddleware,
+  carRentalVendorMiddleware,
   upload.single("car_image"),
   async (req, res) => {
     try {
@@ -65,15 +69,20 @@ router.post(
 );
 
 // Delete car
-router.delete("/:car_id", authMiddleware, adminMiddleware, async (req, res) => {
-  try {
-    const deleted = await Car.findByIdAndDelete(req.params.car_id);
-    if (!deleted) return res.status(404).json({ detail: "Car not found" });
-    res.status(204).send();
-  } catch (error) {
-    res.status(500).json({ detail: error.message });
+router.delete(
+  "/:car_id",
+  authMiddleware,
+  carRentalVendorMiddleware,
+  async (req, res) => {
+    try {
+      const deleted = await Car.findByIdAndDelete(req.params.car_id);
+      if (!deleted) return res.status(404).json({ detail: "Car not found" });
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ detail: error.message });
+    }
   }
-});
+);
 
 // Update car quantity
 router.patch("/:car_id", authMiddleware, adminMiddleware, async (req, res) => {

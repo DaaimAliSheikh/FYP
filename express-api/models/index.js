@@ -5,6 +5,16 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password_hash: { type: String, required: true },
   is_admin: { type: Boolean, default: false },
+  role: {
+    type: String,
+    enum: ["user", "vendor"],
+    default: "user",
+  },
+  vendor_type: {
+    type: String,
+    enum: ["venue", "car_rental", "catering", "photography", null],
+    default: null,
+  },
 });
 
 const userContactSchema = new mongoose.Schema({
@@ -76,11 +86,12 @@ const cateringSchema = new mongoose.Schema({
   catering_image: { type: String },
 });
 
-const decorationSchema = new mongoose.Schema({
-  decoration_name: { type: String, required: true },
-  decoration_price: { type: Number, required: true, min: 0 },
-  decoration_description: { type: String, required: true },
-  decoration_image: { type: String },
+const photographySchema = new mongoose.Schema({
+  photographer_name: { type: String, required: true },
+  photographer_price: { type: Number, required: true, min: 0 },
+  photographer_description: { type: String, required: true },
+  photographer_image: { type: String },
+  photographer_portfolio_url: { type: String },
 });
 
 const carSchema = new mongoose.Schema({
@@ -148,7 +159,7 @@ const bookingSchema = new mongoose.Schema({
     required: true,
   },
   catering_id: { type: mongoose.Schema.Types.ObjectId, ref: "Catering" },
-  decoration_id: { type: mongoose.Schema.Types.ObjectId, ref: "Decoration" },
+  photography_id: { type: mongoose.Schema.Types.ObjectId, ref: "Photography" },
   promo_id: { type: mongoose.Schema.Types.ObjectId, ref: "Promo" },
 });
 bookingSchema.index({ venue_id: 1, booking_event_date: 1 }, { unique: true });
@@ -161,7 +172,7 @@ module.exports = {
   Dish: mongoose.model("Dish", dishSchema),
   Catering: mongoose.model("Catering", cateringSchema),
   CateringMenuItem: mongoose.model("CateringMenuItem", cateringMenuItemSchema),
-  Decoration: mongoose.model("Decoration", decorationSchema),
+  Photography: mongoose.model("Photography", photographySchema),
   Car: mongoose.model("Car", carSchema),
   Promo: mongoose.model("Promo", promoSchema),
   CarReservation: mongoose.model("CarReservation", carReservationSchema),

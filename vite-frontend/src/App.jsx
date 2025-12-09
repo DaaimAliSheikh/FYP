@@ -10,6 +10,7 @@ import PaymentsPage from "./pages/PaymentsPage";
 import SettingsPage from "./pages/SettingsPage";
 import MainLayout from "./layouts/MainLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
+import VendorDashboardLayout from "./layouts/VendorDashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import DashboardBookings from "./pages/dashboard/DashboardBookings";
 import DashboardVenues from "./pages/dashboard/DashboardVenues";
@@ -18,8 +19,13 @@ import DashboardDishes from "./pages/dashboard/DashboardDishes";
 import DashboardDecorations from "./pages/dashboard/DashboardDecorations";
 import DashboardCars from "./pages/dashboard/DashboardCars";
 import DashboardPromos from "./pages/dashboard/DashboardPromos";
+import VendorBookingsPage from "./pages/vendor/VendorBookingsPage";
+import VenuesManagementPage from "./pages/vendor/VenuesManagementPage";
+import CarsManagementPage from "./pages/vendor/CarsManagementPage";
+import CateringsManagementPage from "./pages/vendor/CateringsManagementPage";
+import PhotographyManagementPage from "./pages/vendor/PhotographyManagementPage";
 
-function ProtectedRoute({ children, adminOnly = false }) {
+function ProtectedRoute({ children, adminOnly = false, vendorOnly = false }) {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   if (!isAuthenticated) {
@@ -30,40 +36,37 @@ function ProtectedRoute({ children, adminOnly = false }) {
     return <Navigate to="/" replace />;
   }
 
+  if (vendorOnly && user?.role !== "vendor") {
+    return <Navigate to="/" replace />;
+  }
+
   return children;
 }
 
 function App() {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
 
+  const getDefaultRoute = () => {
+    if (!isAuthenticated) return null;
+    if (user?.is_admin) return "/dashboard";
+    if (user?.role === "vendor") {
+      return `/dashboard/${user.vendor_type}`;
+    }
+    return "/";
+  };
+
   return (
     <Routes>
       <Route
         path="/login"
         element={
-          isAuthenticated ? (
-            user?.is_admin ? (
-              <Navigate to="/dashboard" />
-            ) : (
-              <Navigate to="/" />
-            )
-          ) : (
-            <LoginPage />
-          )
+          isAuthenticated ? <Navigate to={getDefaultRoute()} /> : <LoginPage />
         }
       />
       <Route
         path="/signup"
         element={
-          isAuthenticated ? (
-            user?.is_admin ? (
-              <Navigate to="/dashboard" />
-            ) : (
-              <Navigate to="/" />
-            )
-          ) : (
-            <SignupPage />
-          )
+          isAuthenticated ? <Navigate to={getDefaultRoute()} /> : <SignupPage />
         }
       />
 
@@ -149,6 +152,55 @@ function App() {
         <Route path="decorations" element={<DashboardDecorations />} />
         <Route path="cars" element={<DashboardCars />} />
         <Route path="promos" element={<DashboardPromos />} />
+      </Route>
+
+      {/* Vendor Dashboard Routes */}
+      <Route
+        path="/dashboard/venue"
+        element={
+          <ProtectedRoute vendorOnly>
+            <VendorDashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="bookings" element={<VendorBookingsPage />} />
+        <Route path="venues" element={<VenuesManagementPage />} />
+      </Route>
+
+      <Route
+        path="/dashboard/car_rental"
+        element={
+          <ProtectedRoute vendorOnly>
+            <VendorDashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="bookings" element={<VendorBookingsPage />} />
+        <Route path="cars" element={<CarsManagementPage />} />
+      </Route>
+
+      <Route
+        path="/dashboard/catering"
+        element={
+          <ProtectedRoute vendorOnly>
+            <VendorDashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="bookings" element={<VendorBookingsPage />} />
+        <Route path="caterings" element={<CateringsManagementPage />} />
+      </Route>
+
+      <Route
+        path="/dashboard/photography"
+        element={
+          <ProtectedRoute vendorOnly>
+            <VendorDashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="bookings" element={<VendorBookingsPage />} />
+        <Route path="photography" element={<PhotographyManagementPage />} />
       </Route>
     </Routes>
   );

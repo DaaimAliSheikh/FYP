@@ -24,7 +24,7 @@ import {
 } from "@/store/slices/bookingSlice";
 import { fetchVenues } from "@/store/slices/venueSlice";
 import { fetchCaterings } from "@/store/slices/cateringSlice";
-import { fetchDecorations } from "@/store/slices/decorationSlice";
+import { fetchPhotography } from "@/store/slices/photographySlice";
 import { fetchCars } from "@/store/slices/carSlice";
 import { fetchPromos } from "@/store/slices/promoSlice";
 import api from "@/services/api";
@@ -34,7 +34,7 @@ export default function BookingDialog({ open, onClose, bookingId }) {
   const { user } = useSelector((state) => state.auth);
   const { items: venues } = useSelector((state) => state.venues);
   const { items: caterings } = useSelector((state) => state.caterings);
-  const { items: decorations } = useSelector((state) => state.decorations);
+  const { items: photography } = useSelector((state) => state.photography);
   const { items: cars } = useSelector((state) => state.cars);
   const { items: promos } = useSelector((state) => state.promos);
 
@@ -44,7 +44,7 @@ export default function BookingDialog({ open, onClose, bookingId }) {
     booking_guest_count: 1,
     venue_id: "",
     catering_id: "",
-    decoration_id: "",
+    photography_id: "",
     promo_id: "",
     car_ids: [],
     payment_method: "debit_card",
@@ -63,7 +63,7 @@ export default function BookingDialog({ open, onClose, bookingId }) {
         booking_guest_count: 1,
         venue_id: "",
         catering_id: "",
-        decoration_id: "",
+        photography_id: "",
         promo_id: "",
         car_ids: [],
         payment_method: "debit_card",
@@ -94,8 +94,8 @@ export default function BookingDialog({ open, onClose, bookingId }) {
         booking_guest_count: booking.booking_guest_count,
         venue_id: booking.venue_id?._id || booking.venue_id || "",
         catering_id: booking.catering_id?._id || booking.catering_id || "",
-        decoration_id:
-          booking.decoration_id?._id || booking.decoration_id || "",
+        photography_id:
+          booking.photography_id?._id || booking.photography_id || "",
         promo_id: booking.promo_id?._id || booking.promo_id || "",
         car_ids: booking.car_reservations?.map((r) => r.car_id) || [],
         payment_method: booking.payment?.payment_method || "debit_card",
@@ -107,7 +107,7 @@ export default function BookingDialog({ open, onClose, bookingId }) {
 
   useEffect(() => {
     calculateTotal();
-  }, [formData, venues, caterings, decorations, cars, promos, dishes]);
+  }, [formData, venues, caterings, photography, cars, promos, dishes]);
 
   const calculateTotal = () => {
     let total = 0;
@@ -126,10 +126,10 @@ export default function BookingDialog({ open, onClose, bookingId }) {
     );
     if (catering) total += dishCostPerServing;
 
-    const decoration = decorations.find(
-      (d) => d.decoration_id === formData.decoration_id
+    const photographyService = photography.find(
+      (p) => p._id === formData.photography_id
     );
-    if (decoration) total += decoration.decoration_price;
+    if (photographyService) total += photographyService.photographer_price;
 
     formData.car_ids.forEach((carId) => {
       const car = cars.find((c) => c.car_id === carId);
@@ -158,7 +158,7 @@ export default function BookingDialog({ open, onClose, bookingId }) {
           user_id: user.user_id,
           venue_id: formData.venue_id,
           catering_id: formData.catering_id || undefined,
-          decoration_id: formData.decoration_id || undefined,
+          photography_id: formData.photography_id || undefined,
           promo_id: formData.promo_id || undefined,
         },
         payment: {
@@ -268,21 +268,19 @@ export default function BookingDialog({ open, onClose, bookingId }) {
           </FormControl>
 
           <FormControl fullWidth margin="normal">
-            <InputLabel>Decoration (Optional)</InputLabel>
+            <InputLabel>Photography (Optional)</InputLabel>
             <Select
-              value={formData.decoration_id}
+              value={formData.photography_id}
               onChange={(e) =>
-                setFormData({ ...formData, decoration_id: e.target.value })
+                setFormData({ ...formData, photography_id: e.target.value })
               }
-              label="Decoration (Optional)"
+              label="Photography (Optional)"
             >
               <MenuItem value="">None</MenuItem>
-              {decorations.map((decoration) => (
-                <MenuItem
-                  key={decoration.decoration_id}
-                  value={decoration.decoration_id}
-                >
-                  {decoration.decoration_name} - ${decoration.decoration_price}
+              {photography.map((photographer) => (
+                <MenuItem key={photographer._id} value={photographer._id}>
+                  {photographer.photographer_name} - $
+                  {photographer.photographer_price}
                 </MenuItem>
               ))}
             </Select>

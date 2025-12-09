@@ -52,7 +52,13 @@ export default function LoginPage() {
       const result = await dispatch(loginUser(formData));
       if (loginUser.fulfilled.match(result)) {
         const user = result.payload;
-        navigate(user.is_admin ? "/dashboard" : "/");
+        if (user.is_admin) {
+          navigate("/dashboard");
+        } else if (user.role === "vendor") {
+          navigate(`/dashboard/${user.vendor_type}/bookings`);
+        } else {
+          navigate("/");
+        }
       } else {
         setOpenSnackbar(true);
       }

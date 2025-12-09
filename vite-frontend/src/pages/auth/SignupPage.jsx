@@ -12,6 +12,11 @@ import {
   Link,
   Snackbar,
   Alert,
+  Tabs,
+  Tab,
+  Box,
+  MenuItem,
+  Select,
 } from "@mui/material";
 import { signupUser } from "@/store/slices/authSlice";
 
@@ -20,13 +25,25 @@ export default function SignupPage() {
   const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
 
+  const [tabValue, setTabValue] = useState(0);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
+    role: "user",
+    vendor_type: "",
   });
   const [formErrors, setFormErrors] = useState({});
   const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+    setFormData({
+      ...formData,
+      role: newValue === 0 ? "user" : "vendor",
+      vendor_type: newValue === 0 ? "" : formData.vendor_type,
+    });
+  };
 
   const validate = () => {
     const errors = {};
@@ -41,6 +58,9 @@ export default function SignupPage() {
     if (!formData.password || formData.password.length < 6) {
       errors.password = "Password should be at least 6 characters";
     }
+    if (formData.role === "vendor" && !formData.vendor_type) {
+      errors.vendor_type = "Vendor category is required";
+    }
     return errors;
   };
 
@@ -53,7 +73,13 @@ export default function SignupPage() {
       const result = await dispatch(signupUser(formData));
       if (signupUser.fulfilled.match(result)) {
         const user = result.payload;
-        navigate(user.is_admin ? "/dashboard" : "/");
+        if (user.is_admin) {
+          navigate("/dashboard");
+        } else if (user.role === "vendor") {
+          navigate(`/dashboard/${user.vendor_type}/bookings`);
+        } else {
+          navigate("/");
+        }
       } else {
         setOpenSnackbar(true);
       }
@@ -93,6 +119,11 @@ export default function SignupPage() {
 
       <form noValidate onSubmit={handleSubmit}>
         <Stack spacing={2}>
+          <Tabs value={tabValue} onChange={handleTabChange} centered>
+            <Tab label="User" />
+            <Tab label="Vendor" />
+          </Tabs>
+
           <FormControl error={Boolean(formErrors.username)}>
             <InputLabel>Username</InputLabel>
             <OutlinedInput
@@ -133,6 +164,26 @@ export default function SignupPage() {
               <FormHelperText>{formErrors.password}</FormHelperText>
             )}
           </FormControl>
+
+          {tabValue === 1 && (
+            <FormControl error={Boolean(formErrors.vendor_type)}>
+              <InputLabel>Vendor Category</InputLabel>
+              <Select
+                name="vendor_type"
+                value={formData.vendor_type}
+                onChange={handleChange}
+                label="Vendor Category"
+              >
+                <MenuItem value="venue">Venue</MenuItem>
+                <MenuItem value="car_rental">Car Rental</MenuItem>
+                <MenuItem value="catering">Catering</MenuItem>
+                <MenuItem value="photography">Photography</MenuItem>
+              </Select>
+              {formErrors.vendor_type && (
+                <FormHelperText>{formErrors.vendor_type}</FormHelperText>
+              )}
+            </FormControl>
+          )}
 
           <Button
             disabled={loading}

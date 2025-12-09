@@ -28,7 +28,8 @@ router.get("/me", authMiddleware, async (req, res) => {
 // Signup
 router.post("/signup", async (req, res) => {
   try {
-    const { username, email, password, user_contacts } = req.body;
+    const { username, email, password, role, vendor_type, user_contacts } =
+      req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -38,7 +39,19 @@ router.post("/signup", async (req, res) => {
     }
 
     const password_hash = await hashPassword(password);
-    const user = await User.create({ username, email, password_hash });
+    const userData = {
+      username,
+      email,
+      password_hash,
+      role: role || "user",
+    };
+
+    // Only set vendor_type if role is vendor
+    if (role === "vendor" && vendor_type) {
+      userData.vendor_type = vendor_type;
+    }
+
+    const user = await User.create(userData);
 
     const token = createAccessToken(user._id);
     res.cookie("access_token", token, {
@@ -52,6 +65,8 @@ router.post("/signup", async (req, res) => {
       username: user.username,
       email: user.email,
       is_admin: user.is_admin,
+      role: user.role,
+      vendor_type: user.vendor_type,
     });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -85,6 +100,8 @@ router.post("/login", async (req, res) => {
       username: user.username,
       email: user.email,
       is_admin: user.is_admin,
+      role: user.role,
+      vendor_type: user.vendor_type,
     });
   } catch (error) {
     res.status(500).json({ detail: error.message });

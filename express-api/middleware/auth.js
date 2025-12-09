@@ -32,4 +32,61 @@ const adminMiddleware = (req, res, next) => {
   next();
 };
 
-module.exports = { authMiddleware, adminMiddleware };
+const vendorMiddleware = (req, res, next) => {
+  if (req.user.role !== "vendor" && !req.user.is_admin) {
+    return res.status(403).json({ detail: "Vendor access required" });
+  }
+  next();
+};
+
+const venueVendorMiddleware = (req, res, next) => {
+  if (req.user.role !== "vendor" || req.user.vendor_type !== "venue") {
+    if (!req.user.is_admin) {
+      return res.status(403).json({ detail: "Venue vendor access required" });
+    }
+  }
+  next();
+};
+
+const carRentalVendorMiddleware = (req, res, next) => {
+  if (req.user.role !== "vendor" || req.user.vendor_type !== "car_rental") {
+    if (!req.user.is_admin) {
+      return res
+        .status(403)
+        .json({ detail: "Car rental vendor access required" });
+    }
+  }
+  next();
+};
+
+const cateringVendorMiddleware = (req, res, next) => {
+  if (req.user.role !== "vendor" || req.user.vendor_type !== "catering") {
+    if (!req.user.is_admin) {
+      return res
+        .status(403)
+        .json({ detail: "Catering vendor access required" });
+    }
+  }
+  next();
+};
+
+const photographyVendorMiddleware = (req, res, next) => {
+  if (req.user.role !== "vendor" || req.user.vendor_type !== "photography") {
+    if (!req.user.is_admin) {
+      return res
+        .status(403)
+        .json({ detail: "Photography vendor access required" });
+    }
+  }
+  next();
+};
+
+module.exports = {
+  authMiddleware,
+  adminMiddleware,
+  vendorMiddleware,
+  venueVendorMiddleware,
+  carRentalVendorMiddleware,
+  cateringVendorMiddleware,
+  photographyVendorMiddleware,
+};

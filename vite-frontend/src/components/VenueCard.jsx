@@ -75,7 +75,7 @@ export default function VenueCard({ venue, averageRating }) {
             component="img"
             alt={venue.venue_name}
             height="140"
-            image={`http://localhost:8000${venue.venue_image}`}
+            image={`${venue.venue_image}`}
           />
         )}
         <CardContent>
@@ -112,6 +112,7 @@ export default function VenueCard({ venue, averageRating }) {
           sx={{
             padding: 2,
             border: "1px solid #ccc",
+            overflowY: "auto",
           }}
         >
           <CardHeader color="primary.main" title={venue.venue_name} />

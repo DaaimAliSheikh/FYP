@@ -1,6 +1,10 @@
 const express = require("express");
 const { Venue, VenueReview } = require("../models");
-const { authMiddleware, adminMiddleware } = require("../middleware/auth");
+const {
+  authMiddleware,
+  adminMiddleware,
+  venueVendorMiddleware,
+} = require("../middleware/auth");
 const { upload } = require("../utils/upload");
 const config = require("../config/env");
 
@@ -94,7 +98,7 @@ router.delete("/reviews/:venue_review_id", authMiddleware, async (req, res) => {
 router.post(
   "/",
   authMiddleware,
-  adminMiddleware,
+  venueVendorMiddleware,
   upload.single("venue_image"),
   async (req, res) => {
     try {
@@ -114,7 +118,7 @@ router.post(
 router.delete(
   "/:venue_id",
   authMiddleware,
-  adminMiddleware,
+  venueVendorMiddleware,
   async (req, res) => {
     try {
       const deleted = await Venue.findByIdAndDelete(req.params.venue_id);

@@ -1,6 +1,10 @@
 const express = require("express");
 const { Catering, Dish, CateringMenuItem } = require("../models");
-const { authMiddleware, adminMiddleware } = require("../middleware/auth");
+const {
+  authMiddleware,
+  adminMiddleware,
+  cateringVendorMiddleware,
+} = require("../middleware/auth");
 const { upload } = require("../utils/upload");
 const config = require("../config/env");
 
@@ -55,7 +59,7 @@ router.get("/dishes/:dish_id", async (req, res) => {
 router.post(
   "/",
   authMiddleware,
-  adminMiddleware,
+  cateringVendorMiddleware,
   upload.single("catering_image"),
   async (req, res) => {
     try {
@@ -75,7 +79,7 @@ router.post(
 router.delete(
   "/:catering_id",
   authMiddleware,
-  adminMiddleware,
+  cateringVendorMiddleware,
   async (req, res) => {
     try {
       const deleted = await Catering.findByIdAndDelete(req.params.catering_id);

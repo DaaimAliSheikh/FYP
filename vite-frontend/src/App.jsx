@@ -4,6 +4,11 @@ import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import HomePage from "./pages/HomePage";
 import BookingsPage from "./pages/BookingsPage";
+import DashboardPage from "./pages/DashboardPage";
+import ProfilePage from "./pages/ProfilePage";
+import PaymentsPage from "./pages/PaymentsPage";
+import SettingsPage from "./pages/SettingsPage";
+import MainLayout from "./layouts/MainLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import DashboardBookings from "./pages/dashboard/DashboardBookings";
@@ -66,7 +71,9 @@ function App() {
         path="/"
         element={
           <ProtectedRoute>
-            <HomePage />
+            <MainLayout>
+              <HomePage />
+            </MainLayout>
           </ProtectedRoute>
         }
       />
@@ -75,7 +82,53 @@ function App() {
         path="/bookings"
         element={
           <ProtectedRoute>
-            <BookingsPage />
+            <MainLayout>
+              <BookingsPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ProfilePage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/payments"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <PaymentsPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <SettingsPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/user-dashboard"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <DashboardPage />
+            </MainLayout>
           </ProtectedRoute>
         }
       />

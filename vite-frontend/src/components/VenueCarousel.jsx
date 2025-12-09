@@ -1,15 +1,8 @@
 import { useSelector } from "react-redux";
 import useEmblaCarousel from "embla-carousel-react";
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  CardMedia,
-  Rating,
-  IconButton,
-} from "@mui/material";
+import { Box, Typography, IconButton } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import VenueCard from "./VenueCard";
 
 export default function VenueCarousel() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
@@ -47,44 +40,11 @@ export default function VenueCarousel() {
         >
           <Box sx={{ display: "flex", gap: 2 }} className="embla__container">
             {venues.map((venue) => (
-              <Card
+              <VenueCard
                 key={venue.venue_id}
-                sx={{
-                  flex: "0 0 30%",
-                  minWidth: 300,
-                  padding: 2,
-                  border: "1px solid #ccc",
-                }}
-              >
-                {venue.venue_image && (
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={`http://localhost:8000${venue.venue_image}`}
-                    alt={venue.venue_name}
-                  />
-                )}
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    {venue.venue_name}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {venue.venue_address}
-                  </Typography>
-                  <Typography variant="body2">
-                    Capacity: {venue.venue_capacity}
-                  </Typography>
-                  <Typography variant="body2" color="primary">
-                    ${venue.venue_price_per_day}/day
-                  </Typography>
-                  <Rating
-                    value={calculateAverageRating(venue)}
-                    readOnly
-                    size="small"
-                    sx={{ mt: 1 }}
-                  />
-                </CardContent>
-              </Card>
+                venue={venue}
+                averageRating={calculateAverageRating(venue)}
+              />
             ))}
           </Box>
         </Box>

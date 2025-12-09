@@ -18,10 +18,17 @@ import {
   Grid,
   Chip,
   CircularProgress,
+  Stack,
 } from "@mui/material";
 import { LogOut, Calendar, MapPin, Users } from "lucide-react";
 import { fetchMyBookings, deleteBooking } from "@/store/slices/bookingSlice";
 import { logoutUser } from "@/store/slices/authSlice";
+import { fetchVenues } from "@/store/slices/venueSlice";
+import { fetchCaterings } from "@/store/slices/cateringSlice";
+import { fetchDecorations } from "@/store/slices/decorationSlice";
+import { fetchCars } from "@/store/slices/carSlice";
+import { fetchPromos } from "@/store/slices/promoSlice";
+import { fetchDishes } from "@/store/slices/dishSlice";
 import BookingDialog from "@/components/BookingDialog";
 
 export default function BookingsPage() {
@@ -35,6 +42,13 @@ export default function BookingsPage() {
 
   useEffect(() => {
     dispatch(fetchMyBookings());
+    // Fetch all data needed for BookingDialog
+    dispatch(fetchVenues());
+    dispatch(fetchCaterings());
+    dispatch(fetchDecorations());
+    dispatch(fetchCars());
+    dispatch(fetchPromos());
+    dispatch(fetchDishes());
   }, [dispatch]);
 
   const handleLogout = async () => {
@@ -83,26 +97,49 @@ export default function BookingsPage() {
   }
 
   return (
-    <Box>
-      <AppBar position="static">
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <AppBar
+        position="fixed"
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          bgcolor: "background.paper",
+        }}
+      >
         <Toolbar>
           <Typography
+            color="primary"
             variant="h6"
-            sx={{ flexGrow: 1, fontFamily: "Dancing Script, cursive" }}
+            sx={{
+              flexGrow: 1,
+              fontFamily: "Dancing Script, cursive",
+              display: "flex",
+              alignItems: "center",
+              fontSize: "1.5rem",
+            }}
           >
             SHAADI.COM
+            <Chip
+              sx={{ ml: 2 }}
+              color="primary"
+              variant="filled"
+              label="User"
+            />
           </Typography>
-          <Button color="inherit" onClick={() => navigate("/")}>
-            Home
-          </Button>
-          <IconButton
-            onClick={(e) => setAnchorEl(e.currentTarget)}
-            sx={{ ml: 2 }}
-          >
-            <Avatar sx={{ bgcolor: "secondary.main" }}>
-              {user?.username?.charAt(0).toUpperCase()}
-            </Avatar>
-          </IconButton>
+          <Stack direction="row" gap={2}>
+            <Button
+              sx={{ py: 0 }}
+              size="small"
+              variant="contained"
+              onClick={() => navigate("/")}
+            >
+              Home
+            </Button>
+            <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+              <Avatar sx={{ bgcolor: "secondary.main" }}>
+                {user?.username?.charAt(0).toUpperCase()}
+              </Avatar>
+            </IconButton>
+          </Stack>
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
@@ -119,9 +156,18 @@ export default function BookingsPage() {
         </Toolbar>
       </AppBar>
 
-      <Container sx={{ mt: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          My Bookings
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 2,
+          bgcolor: (theme) => theme.palette.background.default,
+          minHeight: "100vh",
+          pt: 10,
+        }}
+      >
+        <Typography variant="h6" gutterBottom color="primary">
+          Bookings
         </Typography>
 
         {myBookings.length === 0 ? (
@@ -199,7 +245,7 @@ export default function BookingsPage() {
             ))}
           </Grid>
         )}
-      </Container>
+      </Box>
 
       <BookingDialog
         open={openDialog}

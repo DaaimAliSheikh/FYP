@@ -6,13 +6,14 @@ import {
   Toolbar,
   Typography,
   Button,
-  Container,
   Box,
   IconButton,
   Avatar,
   Menu,
   MenuItem,
   CircularProgress,
+  Chip,
+  Stack,
 } from "@mui/material";
 import { LogOut } from "lucide-react";
 import { logoutUser } from "@/store/slices/authSlice";
@@ -21,27 +22,21 @@ import { fetchCaterings } from "@/store/slices/cateringSlice";
 import { fetchDecorations } from "@/store/slices/decorationSlice";
 import { fetchCars } from "@/store/slices/carSlice";
 import { fetchPromos } from "@/store/slices/promoSlice";
+import { fetchDishes } from "@/store/slices/dishSlice";
 import VenueCarousel from "@/components/VenueCarousel";
 import CateringCarousel from "@/components/CateringCarousel";
 import DecorationCarousel from "@/components/DecorationCarousel";
 import CarsCarousel from "@/components/CarsCarousel";
 import PromosCarousel from "@/components/PromosCarousel";
-import BookingDialog from "@/components/BookingDialog";
+import DishesCarousel from "@/components/DishesCarousel";
 
 export default function HomePage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const { items: venues, loading: venuesLoading } = useSelector(
-    (state) => state.venues
-  );
-  const { items: caterings } = useSelector((state) => state.caterings);
-  const { items: decorations } = useSelector((state) => state.decorations);
-  const { items: cars } = useSelector((state) => state.cars);
-  const { items: promos } = useSelector((state) => state.promos);
+  const { loading: venuesLoading } = useSelector((state) => state.venues);
 
   const [anchorEl, setAnchorEl] = useState(null);
-  const [openBookingDialog, setOpenBookingDialog] = useState(false);
 
   useEffect(() => {
     dispatch(fetchVenues());
@@ -49,6 +44,7 @@ export default function HomePage() {
     dispatch(fetchDecorations());
     dispatch(fetchCars());
     dispatch(fetchPromos());
+    dispatch(fetchDishes());
   }, [dispatch]);
 
   const handleLogout = async () => {
@@ -72,26 +68,49 @@ export default function HomePage() {
   }
 
   return (
-    <Box>
-      <AppBar position="static">
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <AppBar
+        position="fixed"
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          bgcolor: "background.paper",
+        }}
+      >
         <Toolbar>
           <Typography
+            color="primary"
             variant="h6"
-            sx={{ flexGrow: 1, fontFamily: "Dancing Script, cursive" }}
+            sx={{
+              flexGrow: 1,
+              fontFamily: "Dancing Script, cursive",
+              display: "flex",
+              alignItems: "center",
+              fontSize: "1.5rem",
+            }}
           >
             SHAADI.COM
+            <Chip
+              sx={{ ml: 2 }}
+              color="primary"
+              variant="filled"
+              label="User"
+            />
           </Typography>
-          <Button color="inherit" onClick={() => navigate("/bookings")}>
-            My Bookings
-          </Button>
-          <IconButton
-            onClick={(e) => setAnchorEl(e.currentTarget)}
-            sx={{ ml: 2 }}
-          >
-            <Avatar sx={{ bgcolor: "secondary.main" }}>
-              {user?.username?.charAt(0).toUpperCase()}
-            </Avatar>
-          </IconButton>
+          <Stack direction="row" gap={2}>
+            <Button
+              sx={{ py: 0 }}
+              size="small"
+              variant="contained"
+              onClick={() => navigate("/bookings")}
+            >
+              Bookings
+            </Button>
+            <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+              <Avatar sx={{ bgcolor: "secondary.main" }}>
+                {user?.username?.charAt(0).toUpperCase()}
+              </Avatar>
+            </IconButton>
+          </Stack>
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
@@ -108,36 +127,23 @@ export default function HomePage() {
         </Toolbar>
       </AppBar>
 
-      <Container sx={{ mt: 4 }}>
-        <Box sx={{ mb: 4, textAlign: "center" }}>
-          <Typography variant="h3" gutterBottom>
-            Welcome to Shaadi.com
-          </Typography>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            Book your perfect event venue with us
-          </Typography>
-          <Button
-            variant="contained"
-            size="large"
-            onClick={() => setOpenBookingDialog(true)}
-            sx={{ mt: 2 }}
-          >
-            Create Booking
-          </Button>
-        </Box>
-
-        <VenueCarousel venues={venues} />
-        <CateringCarousel caterings={caterings} />
-        <DecorationCarousel decorations={decorations} />
-        <CarsCarousel cars={cars} />
-        <PromosCarousel promos={promos} />
-      </Container>
-
-      <BookingDialog
-        open={openBookingDialog}
-        onClose={() => setOpenBookingDialog(false)}
-        bookingId={null}
-      />
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 2,
+          bgcolor: (theme) => theme.palette.background.default,
+          minHeight: "100vh",
+          pt: 10,
+        }}
+      >
+        <VenueCarousel />
+        <CateringCarousel />
+        <DecorationCarousel />
+        <CarsCarousel />
+        <DishesCarousel />
+        <PromosCarousel />
+      </Box>
     </Box>
   );
 }

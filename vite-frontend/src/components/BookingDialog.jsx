@@ -50,20 +50,40 @@ export default function BookingDialog({ open, onClose, bookingId }) {
     payment_method: "debit_card",
   });
   const [totalCost, setTotalCost] = useState(0);
+  const [dishes, setDishes] = useState([]);
 
   useEffect(() => {
-    if (open) {
-      dispatch(fetchVenues());
-      dispatch(fetchCaterings());
-      dispatch(fetchDecorations());
-      dispatch(fetchCars());
-      dispatch(fetchPromos());
-
-      if (bookingId) {
-        loadBooking();
-      }
+    if (open && bookingId) {
+      loadBooking();
+    }
+    if (open && !bookingId) {
+      // Reset form for new booking
+      setFormData({
+        booking_event_date: "",
+        booking_guest_count: 1,
+        venue_id: "",
+        catering_id: "",
+        decoration_id: "",
+        promo_id: "",
+        car_ids: [],
+        payment_method: "debit_card",
+      });
     }
   }, [open, bookingId]);
+
+  useEffect(() => {
+    const fetchDishes = async () => {
+      try {
+        const response = await api.get("/caterings/dishes");
+        setDishes(response.data);
+      } catch (error) {
+        console.error("Failed to load dishes:", error);
+      }
+    };
+    if (open && formData.catering_id) {
+      fetchDishes();
+    }
+  }, [open, formData.catering_id]);
 
   const loadBooking = async () => {
     try {
@@ -87,7 +107,7 @@ export default function BookingDialog({ open, onClose, bookingId }) {
 
   useEffect(() => {
     calculateTotal();
-  }, [formData, venues, caterings, decorations, cars, promos]);
+  }, [formData, venues, caterings, decorations, cars, promos, dishes]);
 
   const calculateTotal = () => {
     let total = 0;
@@ -98,7 +118,13 @@ export default function BookingDialog({ open, onClose, bookingId }) {
     const catering = caterings.find(
       (c) => c.catering_id === formData.catering_id
     );
-    if (catering) total += formData.booking_guest_count * 50; // Estimate
+    // Calculate dish cost per serving for the selected catering
+    const dishCostPerServing = dishes.reduce(
+      (sum, dish) =>
+        sum + dish.dish_cost_per_serving * formData.booking_guest_count,
+      0
+    );
+    if (catering) total += dishCostPerServing;
 
     const decoration = decorations.find(
       (d) => d.decoration_id === formData.decoration_id
@@ -115,7 +141,7 @@ export default function BookingDialog({ open, onClose, bookingId }) {
       total = total * (1 - promo.promo_discount);
     }
 
-    setTotalCost(total);
+    setTotalCost(Math.ceil(total));
   };
 
   const handleSubmit = async (e) => {

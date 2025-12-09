@@ -1,37 +1,105 @@
-import { Box, Typography, Card, CardContent, CardMedia } from "@mui/material";
+import { useSelector } from "react-redux";
+import useEmblaCarousel from "embla-carousel-react";
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  CardMedia,
+  IconButton,
+} from "@mui/material";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function CateringCarousel({ caterings }) {
+export default function CateringCarousel() {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
+  const { items: caterings } = useSelector((state) => state.caterings);
+
+  const scrollPrev = () => {
+    if (emblaApi) emblaApi.scrollPrev();
+  };
+
+  const scrollNext = () => {
+    if (emblaApi) emblaApi.scrollNext();
+  };
+
   if (!caterings || caterings.length === 0) return null;
 
   return (
-    <Box sx={{ mb: 4 }}>
-      <Typography variant="h5" gutterBottom>
-        Catering Services
+    <Box sx={{ mt: 5 }}>
+      <Typography variant="h4" color="primary" align="center" gutterBottom>
+        Our Catering Services
       </Typography>
-      <Box sx={{ display: "flex", gap: 2, overflowX: "auto", pb: 2 }}>
-        {caterings.map((catering) => (
-          <Card
-            key={catering.catering_id}
-            sx={{ minWidth: 300, flex: "0 0 auto" }}
-          >
-            {catering.catering_image && (
-              <CardMedia
-                component="img"
-                height="200"
-                image={catering.catering_image}
-                alt={catering.catering_name}
-              />
-            )}
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {catering.catering_name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {catering.catering_description}
-              </Typography>
-            </CardContent>
-          </Card>
-        ))}
+      <Box sx={{ position: "relative" }}>
+        <Box
+          sx={{ overflow: "hidden", width: "100%" }}
+          className="embla"
+          ref={emblaRef}
+        >
+          <Box sx={{ display: "flex", gap: 2 }} className="embla__container">
+            {caterings.map((catering) => (
+              <Card
+                key={catering.catering_id}
+                sx={{
+                  flex: "0 0 30%",
+                  minWidth: 300,
+                  padding: 2,
+                  border: "1px solid #ccc",
+                }}
+              >
+                {catering.catering_image && (
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={`http://localhost:8000${catering.catering_image}`}
+                    alt={catering.catering_name}
+                  />
+                )}
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    {catering.catering_name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {catering.catering_description}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        </Box>
+
+        <IconButton
+          onClick={scrollPrev}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: 0,
+            transform: "translateY(-50%)",
+            zIndex: 1,
+            backgroundColor: "rgba(255, 255, 255, 0.6)",
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 0.8)",
+            },
+          }}
+        >
+          <ChevronLeft />
+        </IconButton>
+
+        <IconButton
+          onClick={scrollNext}
+          sx={{
+            position: "absolute",
+            top: "50%",
+            right: 0,
+            transform: "translateY(-50%)",
+            zIndex: 1,
+            backgroundColor: "rgba(255, 255, 255, 0.6)",
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 0.8)",
+            },
+          }}
+        >
+          <ChevronRight />
+        </IconButton>
       </Box>
     </Box>
   );

@@ -2,18 +2,18 @@ import { useSelector } from "react-redux";
 import useEmblaCarousel from "embla-carousel-react";
 import {
   Box,
-  Typography,
   Card,
   CardContent,
+  CardHeader,
   CardMedia,
-  Rating,
   IconButton,
+  Typography,
 } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function VenueCarousel() {
+export default function DishesCarousel() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
-  const { items: venues } = useSelector((state) => state.venues);
+  const { items: dishes } = useSelector((state) => state.dishes);
 
   const scrollPrev = () => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -23,21 +23,14 @@ export default function VenueCarousel() {
     if (emblaApi) emblaApi.scrollNext();
   };
 
-  const calculateAverageRating = (venue) => {
-    if (!venue.venue_reviews || venue.venue_reviews.length === 0) return 0;
-    const sum = venue.venue_reviews.reduce(
-      (acc, review) => acc + review.venue_rating,
-      0
-    );
-    return Math.round(sum / venue.venue_reviews.length);
-  };
-
-  if (!venues || venues.length === 0) return null;
+  if (!dishes || dishes.length === 0) {
+    return null;
+  }
 
   return (
     <Box sx={{ mt: 5 }}>
       <Typography variant="h4" color="primary" align="center" gutterBottom>
-        Explore Our Venues
+        Delicious Dishes which are ready to serve
       </Typography>
       <Box sx={{ position: "relative" }}>
         <Box
@@ -46,9 +39,9 @@ export default function VenueCarousel() {
           ref={emblaRef}
         >
           <Box sx={{ display: "flex", gap: 2 }} className="embla__container">
-            {venues.map((venue) => (
+            {dishes.map((dish) => (
               <Card
-                key={venue.venue_id}
+                key={dish.dish_id}
                 sx={{
                   flex: "0 0 30%",
                   minWidth: 300,
@@ -56,33 +49,25 @@ export default function VenueCarousel() {
                   border: "1px solid #ccc",
                 }}
               >
-                {venue.venue_image && (
+                <CardHeader title={dish.dish_name} />
+                {dish.dish_image && (
                   <CardMedia
                     component="img"
-                    height="200"
-                    image={`http://localhost:8000${venue.venue_image}`}
-                    alt={venue.venue_name}
+                    alt={dish.dish_name}
+                    height="140"
+                    image={`http://localhost:8000${dish.dish_image}`}
                   />
                 )}
                 <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    {venue.venue_name}
+                  <Typography variant="body2" color="text.secondary">
+                    Type: {dish.dish_type}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {venue.venue_address}
+                    Description: {dish.dish_description}
                   </Typography>
-                  <Typography variant="body2">
-                    Capacity: {venue.venue_capacity}
+                  <Typography variant="body2" color="text.secondary">
+                    Cost per serving: ${dish.dish_cost_per_serving}
                   </Typography>
-                  <Typography variant="body2" color="primary">
-                    ${venue.venue_price_per_day}/day
-                  </Typography>
-                  <Rating
-                    value={calculateAverageRating(venue)}
-                    readOnly
-                    size="small"
-                    sx={{ mt: 1 }}
-                  />
                 </CardContent>
               </Card>
             ))}

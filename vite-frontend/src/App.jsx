@@ -2,6 +2,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 import HomePage from "./pages/HomePage";
 import BookingsPage from "./pages/BookingsPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -69,6 +72,9 @@ function App() {
           isAuthenticated ? <Navigate to={getDefaultRoute()} /> : <SignupPage />
         }
       />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
 
       <Route
         path="/"

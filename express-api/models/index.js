@@ -15,6 +15,11 @@ const userSchema = new mongoose.Schema({
     enum: ["venue", "car_rental", "catering", "photography", null],
     default: null,
   },
+  is_verified: { type: Boolean, default: false },
+  verification_token: { type: String, default: null },
+  verification_token_expires: { type: Date, default: null },
+  reset_password_token: { type: String, default: null },
+  reset_password_token_expires: { type: Date, default: null },
 });
 
 const userContactSchema = new mongoose.Schema({

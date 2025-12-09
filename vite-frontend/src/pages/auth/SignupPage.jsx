@@ -17,13 +17,19 @@ import {
   Box,
   MenuItem,
   Select,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
-import { signupUser } from "@/store/slices/authSlice";
+import api from "@/services/api";
 
 export default function SignupPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state) => state.auth);
+  const { loading: authLoading, error: authError } = useSelector(
+    (state) => state.auth
+  );
 
   const [tabValue, setTabValue] = useState(0);
   const [formData, setFormData] = useState({
@@ -35,6 +41,10 @@ export default function SignupPage() {
   });
   const [formErrors, setFormErrors] = useState({});
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("error");
+  const [loading, setLoading] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -70,18 +80,20 @@ export default function SignupPage() {
     setFormErrors(errors);
 
     if (Object.keys(errors).length === 0) {
-      const result = await dispatch(signupUser(formData));
-      if (signupUser.fulfilled.match(result)) {
-        const user = result.payload;
-        if (user.is_admin) {
-          navigate("/dashboard");
-        } else if (user.role === "vendor") {
-          navigate(`/dashboard/${user.vendor_type}/bookings`);
-        } else {
-          navigate("/");
-        }
-      } else {
+      setLoading(true);
+      try {
+        const response = await api.post("/users/signup", formData);
+        setSnackbarMessage(response.data.detail);
+        setSnackbarSeverity("success");
+        setShowSuccessDialog(true);
+      } catch (error) {
+        setSnackbarMessage(
+          error.response?.data?.detail || "Signup failed. Please try again."
+        );
+        setSnackbarSeverity("error");
         setOpenSnackbar(true);
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -203,12 +215,40 @@ export default function SignupPage() {
       >
         <Alert
           onClose={() => setOpenSnackbar(false)}
-          severity="error"
+          severity={snackbarSeverity}
           variant="filled"
         >
-          {error || "Signup failed"}
+          {snackbarMessage || authError || "Signup failed"}
         </Alert>
       </Snackbar>
+
+      <Dialog
+        open={showSuccessDialog}
+        onClose={() => {
+          setShowSuccessDialog(false);
+          navigate("/login");
+        }}
+      >
+        <DialogTitle>Account Created Successfully!</DialogTitle>
+        <DialogContent>
+          <Typography>{snackbarMessage}</Typography>
+          <Typography sx={{ mt: 2 }} color="text.secondary">
+            Please check your email inbox and click the verification link to
+            activate your account.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setShowSuccessDialog(false);
+              navigate("/login");
+            }}
+            variant="contained"
+          >
+            Go to Login
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }

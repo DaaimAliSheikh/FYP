@@ -13,9 +13,15 @@ import {
   Alert,
   Snackbar,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from "@mui/material";
 import { Eye, EyeOff } from "lucide-react";
 import { loginUser } from "@/store/slices/authSlice";
+import api from "@/services/api";
 
 export default function LoginPage() {
   const dispatch = useDispatch();
@@ -29,6 +35,11 @@ export default function LoginPage() {
   });
   const [formErrors, setFormErrors] = useState({});
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("error");
+  const [showResendDialog, setShowResendDialog] = useState(false);
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
 
   const validate = () => {
     const errors = {};
@@ -60,8 +71,44 @@ export default function LoginPage() {
           navigate("/");
         }
       } else {
+        // Check if it's an email verification error
+        const errorData = result.payload || result.error;
+        if (errorData?.code === "EMAIL_NOT_VERIFIED") {
+          setSnackbarMessage(
+            errorData.detail || "Please verify your email before logging in."
+          );
+          setSnackbarSeverity("warning");
+          setResendEmail(formData.email);
+          setShowResendDialog(true);
+        } else {
+          setSnackbarMessage(
+            error || errorData?.detail || "Invalid credentials"
+          );
+          setSnackbarSeverity("error");
+        }
         setOpenSnackbar(true);
       }
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    try {
+      const response = await api.post("/users/resend-verification", {
+        email: resendEmail,
+      });
+      setSnackbarMessage(response.data.detail);
+      setSnackbarSeverity("success");
+      setOpenSnackbar(true);
+      setShowResendDialog(false);
+    } catch (error) {
+      setSnackbarMessage(
+        error.response?.data?.detail || "Failed to resend verification email"
+      );
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -143,6 +190,16 @@ export default function LoginPage() {
           >
             {loading ? "Signing in..." : "Sign in"}
           </Button>
+
+          <Link
+            component={RouterLink}
+            to="/forgot-password"
+            underline="hover"
+            variant="body2"
+            sx={{ textAlign: "center", display: "block" }}
+          >
+            Forgot password?
+          </Link>
         </Stack>
       </form>
 
@@ -163,12 +220,35 @@ export default function LoginPage() {
       >
         <Alert
           onClose={() => setOpenSnackbar(false)}
-          severity="error"
+          severity={snackbarSeverity}
           variant="filled"
         >
-          {error || "Invalid credentials"}
+          {snackbarMessage || error || "Invalid credentials"}
         </Alert>
       </Snackbar>
+
+      <Dialog
+        open={showResendDialog}
+        onClose={() => setShowResendDialog(false)}
+      >
+        <DialogTitle>Email Not Verified</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Your email address has not been verified yet. Would you like us to
+            resend the verification email to <strong>{resendEmail}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowResendDialog(false)}>Cancel</Button>
+          <Button
+            onClick={handleResendVerification}
+            variant="contained"
+            disabled={resendLoading}
+          >
+            {resendLoading ? "Sending..." : "Resend Verification Email"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }

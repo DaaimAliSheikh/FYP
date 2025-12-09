@@ -64,9 +64,7 @@ const cateringSlice = createSlice({
         state.items.push(action.payload);
       })
       .addCase(deleteCatering.fulfilled, (state, action) => {
-        state.items = state.items.filter(
-          (c) => c.catering_id !== action.payload
-        );
+        state.items = state.items.filter((c) => c._id !== action.payload);
       });
   },
 });

@@ -85,10 +85,10 @@ export default function CarsManagementPage() {
                   Year: {car.car_year}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Seats: {car.car_seating_capacity}
+                  Quantity: {car.car_quantity}
                 </Typography>
                 <Typography variant="h6" color="primary" sx={{ mt: 1 }}>
-                  ${car.car_price_per_day}/day
+                  ${car.car_rental_price}
                 </Typography>
               </CardContent>
             </Card>

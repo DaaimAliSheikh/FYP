@@ -58,7 +58,7 @@ const venueSlice = createSlice({
         state.items.push(action.payload);
       })
       .addCase(deleteVenue.fulfilled, (state, action) => {
-        state.items = state.items.filter((v) => v.venue_id !== action.payload);
+        state.items = state.items.filter((v) => v._id !== action.payload);
       })
       .addCase(fetchVenueReviews.fulfilled, (state, action) => {
         state.reviews = action.payload;

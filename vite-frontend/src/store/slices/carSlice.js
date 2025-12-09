@@ -7,10 +7,17 @@ export const fetchCars = createAsyncThunk("cars/fetchAll", async () => {
 });
 
 export const createCar = createAsyncThunk("cars/create", async (formData) => {
-  const response = await api.post("/cars", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return response.data;
+  try {
+    // Log FormData contents
+
+    const response = await api.post("/cars", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating car:", error.response?.data);
+    throw new Error(error.response?.data?.detail || "Failed to create car");
+  }
 });
 
 export const deleteCar = createAsyncThunk("cars/delete", async (id) => {
@@ -47,7 +54,7 @@ const carSlice = createSlice({
         state.items.push(action.payload);
       })
       .addCase(deleteCar.fulfilled, (state, action) => {
-        state.items = state.items.filter((c) => c.car_id !== action.payload);
+        state.items = state.items.filter((c) => c._id !== action.payload);
       })
       .addCase(updateCar.fulfilled, (state, action) => {
         const index = state.items.findIndex(

@@ -18,8 +18,8 @@ export default function CreateCarForm({ setOpen }) {
     car_make: "",
     car_model: "",
     car_year: "",
-    car_seating_capacity: "",
-    car_price_per_day: "",
+    car_rental_price: "",
+    car_quantity: "",
   });
   const [image, setImage] = useState(null);
 
@@ -33,18 +33,23 @@ export default function CreateCarForm({ setOpen }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const data = new FormData();
-    data.append("car_make", formData.car_make);
-    data.append("car_model", formData.car_model);
-    data.append("car_year", formData.car_year);
-    data.append("car_seating_capacity", formData.car_seating_capacity);
-    data.append("car_price_per_day", formData.car_price_per_day);
-    if (image) {
-      data.append("car_image", image);
-    }
+    try {
+      const data = new FormData();
+      data.append("car_make", formData.car_make);
+      data.append("car_model", formData.car_model);
+      data.append("car_year", formData.car_year);
+      data.append("car_rental_price", formData.car_rental_price);
+      data.append("car_quantity", formData.car_quantity);
+      if (image) {
+        data.append("car_image", image);
+      }
 
-    await dispatch(createCar(data));
-    setOpen(false);
+      await dispatch(createCar(data)).unwrap();
+      setOpen(false);
+    } catch (error) {
+      console.error("Failed to create car:", error);
+      alert("Failed to create car: " + (error.message || "Unknown error"));
+    }
   };
 
   return (
@@ -90,20 +95,20 @@ export default function CreateCarForm({ setOpen }) {
               inputProps={{ min: 1886, max: new Date().getFullYear() + 1 }}
             />
             <TextField
-              label="Seating Capacity"
-              name="car_seating_capacity"
+              label="Rental Price"
+              name="car_rental_price"
               type="number"
-              value={formData.car_seating_capacity}
+              value={formData.car_rental_price}
               onChange={handleChange}
               required
               fullWidth
-              inputProps={{ min: 1 }}
+              inputProps={{ min: 0 }}
             />
             <TextField
-              label="Price per Day"
-              name="car_price_per_day"
+              label="Quantity"
+              name="car_quantity"
               type="number"
-              value={formData.car_price_per_day}
+              value={formData.car_quantity}
               onChange={handleChange}
               required
               fullWidth

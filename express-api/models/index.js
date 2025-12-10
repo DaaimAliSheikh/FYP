@@ -35,22 +35,6 @@ userContactSchema.index(
   { unique: true }
 );
 
-const venueReviewSchema = new mongoose.Schema({
-  venue_review_text: { type: String, required: true, maxlength: 1000 },
-  venue_review_created_at: { type: Date, default: Date.now },
-  venue_rating: { type: Number, required: true, min: 1 },
-  venue_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Venue",
-    required: true,
-  },
-  user_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-});
-
 const venueSchema = new mongoose.Schema(
   {
     venue_name: { type: String, required: true },
@@ -90,6 +74,20 @@ const venueSchema = new mongoose.Schema(
         package_name: { type: String, required: true },
         package_price: { type: Number, required: true, min: 0 },
         package_features: [{ type: String }],
+      },
+    ],
+
+    // Embedded reviews
+    venue_reviews: [
+      {
+        venue_review_text: { type: String, required: true, maxlength: 1000 },
+        venue_review_created_at: { type: Date, default: Date.now },
+        venue_rating: { type: Number, required: true, min: 1, max: 5 },
+        user_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
       },
     ],
 
@@ -257,7 +255,6 @@ module.exports = {
   User: mongoose.model("User", userSchema),
   UserContact: mongoose.model("UserContact", userContactSchema),
   Venue: mongoose.model("Venue", venueSchema),
-  VenueReview: mongoose.model("VenueReview", venueReviewSchema),
   Dish: mongoose.model("Dish", dishSchema),
   Catering: mongoose.model("Catering", cateringSchema),
   CateringMenuItem: mongoose.model("CateringMenuItem", cateringMenuItemSchema),

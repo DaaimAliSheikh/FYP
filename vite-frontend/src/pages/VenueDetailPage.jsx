@@ -368,16 +368,9 @@ export default function VenueDetailPage() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Back Button */}
-      <Button
-        startIcon={<ArrowLeft />}
-        onClick={() => navigate(-1)}
-        sx={{ mb: 3 }}
-        variant="outlined"
-      >
-        Back to Venues
-      </Button>
+     
 
       {/* Hero Section with Gallery */}
       <Paper elevation={3} sx={{ mb: 4, overflow: "hidden", borderRadius: 3 }}>

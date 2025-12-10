@@ -16,15 +16,6 @@ export default function VenueCarousel() {
     if (emblaApi) emblaApi.scrollNext();
   };
 
-  const calculateAverageRating = (venue) => {
-    if (!venue.venue_reviews || venue.venue_reviews.length === 0) return 0;
-    const sum = venue.venue_reviews.reduce(
-      (acc, review) => acc + review.venue_rating,
-      0
-    );
-    return Math.round(sum / venue.venue_reviews.length);
-  };
-
   if (!venues || venues.length === 0) return null;
 
   return (
@@ -41,9 +32,9 @@ export default function VenueCarousel() {
           <Box sx={{ display: "flex", gap: 2 }} className="embla__container">
             {venues.map((venue) => (
               <VenueCard
-                key={venue.venue_id}
+                key={venue._id}
                 venue={venue}
-                averageRating={calculateAverageRating(venue)}
+                averageRating={venue.averageRating || 0}
               />
             ))}
           </Box>

@@ -31,6 +31,7 @@ import CarsManagementPage from "./pages/vendor/CarsManagementPage";
 import CateringsManagementPage from "./pages/vendor/CateringsManagementPage";
 import PhotographyManagementPage from "./pages/vendor/PhotographyManagementPage";
 import VendorEnquiriesPage from "./pages/vendor/VendorEnquiriesPage";
+import VendorReviewsPage from "./pages/vendor/VendorReviewsPage";
 
 function ProtectedRoute({ children, adminOnly = false, vendorOnly = false }) {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
@@ -195,6 +196,7 @@ function App() {
         <Route path="bookings" element={<VendorBookingsPage />} />
         <Route path="venues" element={<VenuesManagementPage />} />
         <Route path="enquiries" element={<VendorEnquiriesPage />} />
+        <Route path="reviews" element={<VendorReviewsPage />} />
       </Route>
 
       <Route

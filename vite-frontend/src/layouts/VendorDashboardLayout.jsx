@@ -27,6 +27,7 @@ import {
   CameraAlt,
   Logout,
   QuestionAnswer,
+  Star,
 } from "@mui/icons-material";
 import { logoutUser } from "@/store/slices/authSlice";
 
@@ -49,6 +50,7 @@ const getMenuItemsForVendor = (vendorType) => {
   const vendorSpecificItems = {
     venue: [
       { text: "Venues", icon: <Place />, path: "/dashboard/venue/venues" },
+      { text: "Reviews", icon: <Star />, path: "/dashboard/venue/reviews" },
     ],
     car_rental: [
       {

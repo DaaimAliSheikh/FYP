@@ -38,7 +38,7 @@ router.post(
     try {
       const decorationData = { ...req.body };
       if (req.file) {
-        decorationData.decoration_image = `${config.SERVER_BASE_URL}images/${req.file.filename}`;
+        decorationData.decoration_image = `${config.SERVER_BASE_URL}/images/${req.file.filename}`;
       }
       const decoration = await Decoration.create(decorationData);
       res.status(201).json(decoration);

@@ -65,7 +65,7 @@ router.post(
     try {
       const cateringData = { ...req.body };
       if (req.file) {
-        cateringData.catering_image = `${config.SERVER_BASE_URL}images/${req.file.filename}`;
+        cateringData.catering_image = `${config.SERVER_BASE_URL}/images/${req.file.filename}`;
       }
       const catering = await Catering.create(cateringData);
       res.status(201).json(catering);
@@ -102,7 +102,7 @@ router.post(
     try {
       const dishData = { ...req.body };
       if (req.file) {
-        dishData.dish_image = `${config.SERVER_BASE_URL}images/${req.file.filename}`;
+        dishData.dish_image = `${config.SERVER_BASE_URL}/images/${req.file.filename}`;
       }
       const dish = await Dish.create(dishData);
       res.status(201).json(dish);

@@ -51,13 +51,62 @@ const venueReviewSchema = new mongoose.Schema({
   },
 });
 
-const venueSchema = new mongoose.Schema({
-  venue_name: { type: String, required: true },
-  venue_address: { type: String, required: true },
-  venue_capacity: { type: Number, required: true, min: 1 },
-  venue_price_per_day: { type: Number, required: true, min: 0 },
-  venue_image: { type: String },
-});
+const venueSchema = new mongoose.Schema(
+  {
+    venue_name: { type: String, required: true },
+    venue_address: { type: String, required: true },
+    venue_capacity: { type: Number, required: true, min: 1 },
+    venue_price_per_day: { type: Number, required: true, min: 0 },
+
+    // Detailed information
+    venue_bio: { type: String, maxlength: 500 },
+    venue_description: { type: String, maxlength: 2000 },
+
+    // Multiple images
+    venue_images: [{ type: String }], // Array of image URLs
+    venue_profile_image: { type: String }, // Main profile/avatar image
+
+    // Contact information
+    venue_phone: { type: String },
+    venue_email: { type: String },
+
+    // Capacity details
+    venue_indoor_capacity: { type: Number, min: 0 },
+    venue_outdoor_capacity: { type: Number, min: 0 },
+
+    // Operating hours
+    venue_weekday_hours: { type: String },
+    venue_weekend_hours: { type: String },
+
+    // Amenities (stored as array of strings)
+    venue_amenities: [{ type: String }],
+
+    // Special features (stored as array of strings)
+    venue_special_features: [{ type: String }],
+
+    // Packages (stored as array of objects)
+    venue_packages: [
+      {
+        package_name: { type: String, required: true },
+        package_price: { type: Number, required: true, min: 0 },
+        package_features: [{ type: String }],
+      },
+    ],
+
+    // Legacy single image field (keep for backward compatibility)
+    venue_image: { type: String },
+
+    // Reference to vendor user
+    user_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  },
+  {
+    timestamps: true, // Adds createdAt and updatedAt
+  }
+);
 
 const dishSchema = new mongoose.Schema({
   dish_name: { type: String, required: true },
@@ -182,27 +231,27 @@ const enquirySchema = new mongoose.Schema({
   enquiry_created_at: { type: Date, default: Date.now },
   enquiry_closed_at: { type: Date, default: null },
 
-  // Vendor type and ID for reusability across all vendor categories
+  // Vendor type and item ID for reusability across all vendor categories
   vendor_type: {
     type: String,
     enum: ["venue", "catering", "car_rental", "photography"],
     required: true,
   },
-  vendor_id: {
+  vendor_item_id: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
 
-  // Optional: User ID if submitted by logged in user
+  // User ID of the vendor who owns the item
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    default: null,
+    required: true,
   },
 });
 
 // Index for efficient vendor enquiry queries
-enquirySchema.index({ vendor_type: 1, vendor_id: 1, enquiry_status: 1 });
+enquirySchema.index({ user_id: 1, vendor_type: 1, enquiry_status: 1 });
 
 module.exports = {
   User: mongoose.model("User", userSchema),

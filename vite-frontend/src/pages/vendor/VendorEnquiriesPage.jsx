@@ -58,64 +58,22 @@ export default function VendorEnquiriesPage() {
   const vendorType = user?.vendor_type;
 
   useEffect(() => {
-    if (vendorType) {
+    if (user?._id) {
       fetchEnquiries();
     }
-  }, [vendorType]);
+  }, [user?._id]);
 
   const fetchEnquiries = async () => {
-    if (!vendorType) return;
+    if (!user?._id) return;
 
     setLoading(true);
     setError("");
 
     try {
-      // For this example, we'll fetch all venues for this user to get the vendor ID
-      // In a real scenario, you might store the vendor ID in the user profile
-      let vendorId = null;
-
-      switch (vendorType) {
-        case "venue":
-          const venuesResponse = await api.get("/venues");
-          const userVenues =
-            venuesResponse.data.venues?.filter((v) => v.user_id === user._id) ||
-            [];
-          if (userVenues.length > 0) vendorId = userVenues[0]._id;
-          break;
-        case "catering":
-          const cateringsResponse = await api.get("/caterings");
-          const userCaterings =
-            cateringsResponse.data.caterings?.filter(
-              (c) => c.user_id === user._id
-            ) || [];
-          if (userCaterings.length > 0) vendorId = userCaterings[0]._id;
-          break;
-        case "car_rental":
-          const carsResponse = await api.get("/cars");
-          const userCars =
-            carsResponse.data.cars?.filter((c) => c.user_id === user._id) || [];
-          if (userCars.length > 0) vendorId = userCars[0]._id;
-          break;
-        case "photography":
-          const photosResponse = await api.get("/photography");
-          const userPhotos =
-            photosResponse.data.photography?.filter(
-              (p) => p.user_id === user._id
-            ) || [];
-          if (userPhotos.length > 0) vendorId = userPhotos[0]._id;
-          break;
-      }
-
-      if (!vendorId) {
-        setError(
-          "No vendor profile found. Please create your business profile first."
-        );
-        setLoading(false);
-        return;
-      }
-
-      // Fetch enquiries for this vendor
-      const response = await api.get(`/enquiries/${vendorType}/${vendorId}`);
+      // Fetch enquiries for this vendor user
+      const response = await api.get(`/enquiries/vendor/${user._id}`, {
+        params: vendorType ? { vendor_type: vendorType } : {},
+      });
       setEnquiries(response.data.enquiries || []);
     } catch (error) {
       console.error("Error fetching enquiries:", error);
@@ -212,7 +170,7 @@ export default function VendorEnquiriesPage() {
     return status === "open" ? <Circle size={16} /> : <CheckCircle size={16} />;
   };
 
-  if (!vendorType) {
+  if (!user?.role || user.role !== "vendor") {
     return (
       <Box p={4}>
         <Alert severity="error">
@@ -319,6 +277,9 @@ export default function VendorEnquiriesPage() {
                         <strong>Customer</strong>
                       </TableCell>
                       <TableCell>
+                        <strong>Vendor Item</strong>
+                      </TableCell>
+                      <TableCell>
                         <strong>Contact</strong>
                       </TableCell>
                       <TableCell>
@@ -338,13 +299,13 @@ export default function VendorEnquiriesPage() {
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={7} align="center">
+                        <TableCell colSpan={8} align="center">
                           <Typography>Loading enquiries...</Typography>
                         </TableCell>
                       </TableRow>
                     ) : filteredEnquiries.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} align="center">
+                        <TableCell colSpan={8} align="center">
                           <Typography color="text.secondary">
                             {enquiries.length === 0
                               ? "No enquiries received yet."
@@ -364,6 +325,19 @@ export default function VendorEnquiriesPage() {
                             <Typography variant="body2" fontWeight="bold">
                               {enquiry.enquiry_name}
                             </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight="bold">
+                              {enquiry.vendor_item_name || "Unknown"}
+                            </Typography>
+                            <Chip
+                              label={enquiry.vendor_type
+                                .replace("_", " ")
+                                .toUpperCase()}
+                              size="small"
+                              variant="outlined"
+                              sx={{ mt: 0.5 }}
+                            />
                           </TableCell>
                           <TableCell>
                             <Box>
@@ -506,6 +480,27 @@ export default function VendorEnquiriesPage() {
                   <Typography variant="body1" fontWeight="bold" mb={2}>
                     #{selectedEnquiry._id.slice(-8).toUpperCase()}
                   </Typography>
+
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    VENDOR ITEM
+                  </Typography>
+                  <Box mb={2}>
+                    <Typography variant="body1" fontWeight="bold">
+                      {selectedEnquiry.vendor_item_name || "Unknown"}
+                    </Typography>
+                    <Chip
+                      label={selectedEnquiry.vendor_type
+                        .replace("_", " ")
+                        .toUpperCase()}
+                      size="small"
+                      variant="outlined"
+                      sx={{ mt: 0.5 }}
+                    />
+                  </Box>
 
                   <Typography
                     variant="subtitle2"

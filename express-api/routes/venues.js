@@ -10,34 +10,74 @@ const config = require("../config/env");
 
 const router = express.Router();
 
-// Get all venues
+// Get all venues (simplified for list/carousel view)
 router.get("/", async (req, res) => {
   try {
-    const venues = await Venue.find();
-    // Fetch reviews for each venue
-    const venuesWithReviews = await Promise.all(
+    const venues = await Venue.find().populate("user_id", "username email");
+
+    // Fetch average rating for each venue
+    const venuesWithRatings = await Promise.all(
       venues.map(async (venue) => {
-        const reviews = await VenueReview.find({
-          venue_id: venue._id,
-        }).populate("user_id", "username email");
+        const reviews = await VenueReview.find({ venue_id: venue._id });
+        const averageRating =
+          reviews.length > 0
+            ? reviews.reduce((sum, review) => sum + review.venue_rating, 0) /
+              reviews.length
+            : 0;
+
         return {
-          ...venue.toObject(),
-          venue_reviews: reviews,
+          _id: venue._id,
+          venue_name: venue.venue_name,
+          venue_address: venue.venue_address,
+          venue_capacity: venue.venue_capacity,
+          venue_price_per_day: venue.venue_price_per_day,
+          venue_image:
+            venue.venue_profile_image ||
+            venue.venue_images?.[0] ||
+            venue.venue_image,
+          averageRating: averageRating,
+          reviewCount: reviews.length,
+          user_id: venue.user_id,
         };
       })
     );
-    res.json(venuesWithReviews);
+
+    res.json({ venues: venuesWithRatings });
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }
 });
 
-// Get venue by ID
+// Get venue by ID with full details and reviews
 router.get("/:venue_id", async (req, res) => {
   try {
-    const venue = await Venue.findById(req.params.venue_id);
+    const venue = await Venue.findById(req.params.venue_id).populate(
+      "user_id",
+      "username email"
+    );
     if (!venue) return res.status(404).json({ detail: "Venue not found" });
-    res.json(venue);
+
+    // Fetch reviews with user details
+    const reviews = await VenueReview.find({
+      venue_id: req.params.venue_id,
+    })
+      .populate("user_id", "username email")
+      .sort({ venue_review_created_at: -1 });
+
+    // Calculate average rating
+    const averageRating =
+      reviews.length > 0
+        ? reviews.reduce((sum, review) => sum + review.venue_rating, 0) /
+          reviews.length
+        : 0;
+
+    // Return venue with reviews and rating
+    res.json({
+      ...venue.toObject(),
+      venue_reviews: reviews,
+      averageRating: averageRating,
+      reviewCount: reviews.length,
+    });
   } catch (error) {
     res.status(500).json({ detail: error.message });
   }
@@ -99,13 +139,37 @@ router.post(
   "/",
   authMiddleware,
   venueVendorMiddleware,
-  upload.single("venue_image"),
+  upload.array("venue_images", 10), // Allow up to 10 images
   async (req, res) => {
     try {
-      const venueData = { ...req.body };
-      if (req.file) {
-        venueData.venue_image = `${config.SERVER_BASE_URL}images/${req.file.filename}`;
+      const venueData = { ...req.body, user_id: req.user._id };
+
+      // Handle multiple images
+      if (req.files && req.files.length > 0) {
+        venueData.venue_images = req.files.map(
+          (file) => `${config.SERVER_BASE_URL}/images/${file.filename}`
+        );
+        // Set first image as profile image if not explicitly set
+        if (!venueData.venue_profile_image) {
+          venueData.venue_profile_image = venueData.venue_images[0];
+        }
+        // Set first image as legacy venue_image for backward compatibility
+        venueData.venue_image = venueData.venue_images[0];
       }
+
+      // Parse JSON fields if they come as strings
+      if (typeof venueData.venue_amenities === "string") {
+        venueData.venue_amenities = JSON.parse(venueData.venue_amenities);
+      }
+      if (typeof venueData.venue_special_features === "string") {
+        venueData.venue_special_features = JSON.parse(
+          venueData.venue_special_features
+        );
+      }
+      if (typeof venueData.venue_packages === "string") {
+        venueData.venue_packages = JSON.parse(venueData.venue_packages);
+      }
+
       const venue = await Venue.create(venueData);
       res.status(201).json(venue);
     } catch (error) {

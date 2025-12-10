@@ -58,7 +58,7 @@ const createVenueMockData = (venueId) => ({
   gallery: [
     "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&h=600",
     "https://images.unsplash.com/photo-1464207687429-7505649dae38?w=800&h=600",
-   
+
     "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=600",
     "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&h=600",
     "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&h=600",
@@ -184,22 +184,80 @@ export default function VenueDetailPage() {
   useEffect(() => {
     const fetchVenueDetails = async () => {
       try {
-        // Fetch basic venue data from API
+        // Fetch venue data from API
         const response = await api.get(`/venues/${id}`);
-        setVenue(response.data);
+        const venueData = response.data;
+        setVenue(venueData);
 
-        // Calculate average rating
-        const venueReviews = response.data.venue_reviews || [];
+        // Set reviews and average rating from API response
+        const venueReviews = venueData.venue_reviews || [];
         setReviews(venueReviews);
-        if (venueReviews.length > 0) {
-          const avgRating =
-            venueReviews.reduce((sum, review) => sum + review.venue_rating, 0) /
-            venueReviews.length;
-          setAverageRating(avgRating);
-        }
+        setAverageRating(venueData.averageRating || 0);
 
-        // Set mock data for detailed information
-        setMockData(createVenueMockData(id));
+        // Use real data if available, otherwise fallback to mock data
+        setMockData({
+          ...createVenueMockData(id),
+          // Override with real data where available
+          name: venueData.venue_name,
+          bio: venueData.venue_bio || createVenueMockData(id).bio,
+          description:
+            venueData.venue_description || createVenueMockData(id).description,
+          profileImage:
+            venueData.venue_profile_image ||
+            createVenueMockData(id).profileImage,
+          gallery:
+            venueData.venue_images?.length > 0
+              ? venueData.venue_images
+              : createVenueMockData(id).gallery,
+          contact: {
+            phone:
+              venueData.venue_phone || createVenueMockData(id).contact.phone,
+            email:
+              venueData.venue_email || createVenueMockData(id).contact.email,
+            address: venueData.venue_address,
+          },
+          capacity: {
+            indoor:
+              venueData.venue_indoor_capacity ||
+              createVenueMockData(id).capacity.indoor,
+            outdoor:
+              venueData.venue_outdoor_capacity ||
+              createVenueMockData(id).capacity.outdoor,
+            total: venueData.venue_capacity,
+          },
+          pricing: {
+            basePrice: venueData.venue_price_per_day,
+            ...createVenueMockData(id).pricing,
+          },
+          operatingHours: {
+            weekdays:
+              venueData.venue_weekday_hours ||
+              createVenueMockData(id).operatingHours.weekdays,
+            weekends:
+              venueData.venue_weekend_hours ||
+              createVenueMockData(id).operatingHours.weekends,
+          },
+          amenities:
+            venueData.venue_amenities?.length > 0
+              ? venueData.venue_amenities.map((amenity) => ({
+                  icon: Wifi, // Default icon, could be enhanced
+                  label: amenity,
+                  description: amenity,
+                }))
+              : createVenueMockData(id).amenities,
+          specialFeatures:
+            venueData.venue_special_features?.length > 0
+              ? venueData.venue_special_features
+              : createVenueMockData(id).specialFeatures,
+          packages:
+            venueData.venue_packages?.length > 0
+              ? venueData.venue_packages.map((pkg) => ({
+                  name: pkg.package_name,
+                  price: pkg.package_price,
+                  features: pkg.package_features,
+                }))
+              : createVenueMockData(id).packages,
+        });
       } catch (error) {
         console.error("Error fetching venue details:", error);
       } finally {
@@ -263,7 +321,7 @@ export default function VenueDetailPage() {
       await api.post("/enquiries", {
         ...enquiryForm,
         vendor_type: "venue",
-        vendor_id: id,
+        vendor_item_id: id,
       });
 
       // Reset form

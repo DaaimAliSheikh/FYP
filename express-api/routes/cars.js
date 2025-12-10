@@ -58,7 +58,7 @@ router.post(
     try {
       const carData = { ...req.body };
       if (req.file) {
-        carData.car_image = `${config.SERVER_BASE_URL}images/${req.file.filename}`;
+        carData.car_image = `${config.SERVER_BASE_URL}/images/${req.file.filename}`;
       }
       const car = await Car.create(carData);
       res.status(201).json(car);

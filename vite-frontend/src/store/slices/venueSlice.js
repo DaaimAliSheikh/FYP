@@ -48,7 +48,7 @@ const venueSlice = createSlice({
       })
       .addCase(fetchVenues.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
+        state.items = action.payload.venues || action.payload;
       })
       .addCase(fetchVenues.rejected, (state, action) => {
         state.loading = false;

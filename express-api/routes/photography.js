@@ -41,7 +41,7 @@ router.post(
     try {
       const photographyData = { ...req.body };
       if (req.file) {
-        photographyData.photographer_image = `${config.SERVER_BASE_URL}images/${req.file.filename}`;
+        photographyData.photographer_image = `${config.SERVER_BASE_URL}/images/${req.file.filename}`;
       }
       const photography = await Photography.create(photographyData);
       res.status(201).json(photography);

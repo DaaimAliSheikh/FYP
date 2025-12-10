@@ -19,7 +19,7 @@ router.post("/", async (req, res) => {
       enquiry_phone,
       enquiry_message,
       vendor_type,
-      vendor_id,
+      vendor_item_id,
     } = req.body;
 
     // Validate required fields
@@ -29,11 +29,11 @@ router.post("/", async (req, res) => {
       !enquiry_phone ||
       !enquiry_message ||
       !vendor_type ||
-      !vendor_id
+      !vendor_item_id
     ) {
       return res.status(400).json({
         detail:
-          "All fields (name, email, phone, message, vendor_type, vendor_id) are required",
+          "All fields (name, email, phone, message, vendor_type, vendor_item_id) are required",
       });
     }
 
@@ -45,49 +45,64 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Create new enquiry
-    const enquiry = new Enquiry({
-      enquiry_name,
-      enquiry_email,
-      enquiry_phone,
-      enquiry_message,
-      vendor_type,
-      vendor_id,
-      user_id: req.user?._id || null, // Optional: link to user if authenticated
-    });
-
-    await enquiry.save();
-
-    // Get vendor details for email notification
-    let vendor = null;
+    // Get vendor item details and owner info for email notification
+    let vendorItem = null;
     let vendorEmail = null;
     let vendorName = "";
+    let vendorUserId = null;
 
     try {
-      // Find the vendor based on type and get their email
+      // Find the vendor item based on type and get owner's email
       switch (vendor_type) {
         case "venue":
-          vendor = await Venue.findById(vendor_id).populate("user_id");
-          vendorEmail = vendor?.user_id?.email;
-          vendorName = vendor?.venue_name || "Venue";
+          vendorItem = await Venue.findById(vendor_item_id).populate("user_id");
+          vendorEmail = vendorItem?.user_id?.email;
+          vendorName = vendorItem?.venue_name || "Venue";
+          vendorUserId = vendorItem?.user_id?._id;
           break;
         case "catering":
-          vendor = await Catering.findById(vendor_id).populate("user_id");
-          vendorEmail = vendor?.user_id?.email;
-          vendorName = vendor?.catering_business_name || "Catering Service";
+          vendorItem = await Catering.findById(vendor_item_id).populate(
+            "user_id"
+          );
+          vendorEmail = vendorItem?.user_id?.email;
+          vendorName = vendorItem?.catering_business_name || "Catering Service";
+          vendorUserId = vendorItem?.user_id?._id;
           break;
         case "car_rental":
-          vendor = await Car.findById(vendor_id).populate("user_id");
-          vendorEmail = vendor?.user_id?.email;
-          vendorName = vendor?.car_brand || "Car Rental";
+          vendorItem = await Car.findById(vendor_item_id).populate("user_id");
+          vendorEmail = vendorItem?.user_id?.email;
+          vendorName = vendorItem?.car_brand || "Car Rental";
+          vendorUserId = vendorItem?.user_id?._id;
           break;
         case "photography":
-          vendor = await Photography.findById(vendor_id).populate("user_id");
-          vendorEmail = vendor?.user_id?.email;
+          vendorItem = await Photography.findById(vendor_item_id).populate(
+            "user_id"
+          );
+          vendorEmail = vendorItem?.user_id?.email;
           vendorName =
-            vendor?.photography_business_name || "Photography Service";
+            vendorItem?.photography_business_name || "Photography Service";
+          vendorUserId = vendorItem?.user_id?._id;
           break;
       }
+
+      if (!vendorUserId) {
+        return res.status(404).json({
+          detail: "Vendor item not found or has no owner",
+        });
+      }
+
+      // Create new enquiry with vendor's user_id
+      const enquiry = new Enquiry({
+        enquiry_name,
+        enquiry_email,
+        enquiry_phone,
+        enquiry_message,
+        vendor_type,
+        vendor_item_id,
+        user_id: vendorUserId,
+      });
+
+      await enquiry.save();
 
       // Send email notification to vendor if email found
       if (vendorEmail) {
@@ -102,50 +117,64 @@ router.post("/", async (req, res) => {
           enquiry._id
         );
       }
-    } catch (emailError) {
-      console.error("Failed to send enquiry notification email:", emailError);
-      // Continue execution - don't fail the enquiry submission due to email issues
-    }
 
-    res.status(201).json({
-      message: "Enquiry submitted successfully",
-      enquiry: {
-        _id: enquiry._id,
-        enquiry_name: enquiry.enquiry_name,
-        enquiry_email: enquiry.enquiry_email,
-        enquiry_phone: enquiry.enquiry_phone,
-        enquiry_message: enquiry.enquiry_message,
-        enquiry_status: enquiry.enquiry_status,
-        enquiry_created_at: enquiry.enquiry_created_at,
-        vendor_type: enquiry.vendor_type,
-        vendor_id: enquiry.vendor_id,
-      },
-    });
+      res.status(201).json({
+        message: "Enquiry submitted successfully",
+        enquiry: {
+          _id: enquiry._id,
+          enquiry_name: enquiry.enquiry_name,
+          enquiry_email: enquiry.enquiry_email,
+          enquiry_phone: enquiry.enquiry_phone,
+          enquiry_message: enquiry.enquiry_message,
+          enquiry_status: enquiry.enquiry_status,
+          enquiry_created_at: enquiry.enquiry_created_at,
+          vendor_type: enquiry.vendor_type,
+          vendor_item_id: enquiry.vendor_item_id,
+          user_id: enquiry.user_id,
+        },
+      });
+    } catch (emailError) {
+      console.error(
+        "Failed to send enquiry notification or create enquiry:",
+        emailError
+      );
+      return res.status(500).json({
+        detail:
+          "Failed to submit enquiry. Please check if the vendor item exists.",
+      });
+    }
   } catch (error) {
     console.error("Error submitting enquiry:", error);
     res.status(500).json({ detail: "Internal server error" });
   }
 });
 
-// Get enquiries for a vendor (with authentication)
-router.get("/:vendor_type/:vendor_id", async (req, res) => {
+// Get enquiries for a vendor by user_id
+router.get("/vendor/:user_id", async (req, res) => {
   try {
-    const { vendor_type, vendor_id } = req.params;
-    const { status } = req.query;
-
-    // Validate vendor type
-    const validVendorTypes = ["venue", "catering", "car_rental", "photography"];
-    if (!validVendorTypes.includes(vendor_type)) {
-      return res.status(400).json({
-        detail: "Invalid vendor type",
-      });
-    }
+    const { user_id } = req.params;
+    const { status, vendor_type } = req.query;
 
     // Build query
     const query = {
-      vendor_type,
-      vendor_id,
+      user_id,
     };
+
+    // Add vendor type filter if provided
+    if (vendor_type) {
+      const validVendorTypes = [
+        "venue",
+        "catering",
+        "car_rental",
+        "photography",
+      ];
+      if (!validVendorTypes.includes(vendor_type)) {
+        return res.status(400).json({
+          detail: "Invalid vendor type",
+        });
+      }
+      query.vendor_type = vendor_type;
+    }
 
     // Add status filter if provided
     if (status && ["open", "closed"].includes(status)) {
@@ -156,9 +185,47 @@ router.get("/:vendor_type/:vendor_id", async (req, res) => {
       .populate("user_id", "username email")
       .sort({ enquiry_created_at: -1 });
 
+    // Populate vendor item names
+    const enrichedEnquiries = await Promise.all(
+      enquiries.map(async (enquiry) => {
+        let vendorItemName = "Unknown";
+        try {
+          switch (enquiry.vendor_type) {
+            case "venue":
+              const venue = await Venue.findById(enquiry.vendor_item_id);
+              vendorItemName = venue?.venue_name || "Unknown Venue";
+              break;
+            case "catering":
+              const catering = await Catering.findById(enquiry.vendor_item_id);
+              vendorItemName =
+                catering?.catering_business_name || "Unknown Catering";
+              break;
+            case "car_rental":
+              const car = await Car.findById(enquiry.vendor_item_id);
+              vendorItemName = car?.car_brand || "Unknown Car";
+              break;
+            case "photography":
+              const photography = await Photography.findById(
+                enquiry.vendor_item_id
+              );
+              vendorItemName =
+                photography?.photography_business_name || "Unknown Photography";
+              break;
+          }
+        } catch (err) {
+          console.error("Error fetching vendor item name:", err);
+        }
+
+        return {
+          ...enquiry.toObject(),
+          vendor_item_name: vendorItemName,
+        };
+      })
+    );
+
     res.json({
-      enquiries,
-      total: enquiries.length,
+      enquiries: enrichedEnquiries,
+      total: enrichedEnquiries.length,
     });
   } catch (error) {
     console.error("Error fetching enquiries:", error);
@@ -194,7 +261,8 @@ router.patch("/:enquiry_id/close", async (req, res) => {
         enquiry_created_at: enquiry.enquiry_created_at,
         enquiry_closed_at: enquiry.enquiry_closed_at,
         vendor_type: enquiry.vendor_type,
-        vendor_id: enquiry.vendor_id,
+        vendor_item_id: enquiry.vendor_item_id,
+        user_id: enquiry.user_id,
       },
     });
   } catch (error) {
@@ -231,7 +299,8 @@ router.patch("/:enquiry_id/open", async (req, res) => {
         enquiry_created_at: enquiry.enquiry_created_at,
         enquiry_closed_at: enquiry.enquiry_closed_at,
         vendor_type: enquiry.vendor_type,
-        vendor_id: enquiry.vendor_id,
+        vendor_item_id: enquiry.vendor_item_id,
+        user_id: enquiry.user_id,
       },
     });
   } catch (error) {

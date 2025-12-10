@@ -58,7 +58,7 @@ const createVenueMockData = (venueId) => ({
   gallery: [
     "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&h=600",
     "https://images.unsplash.com/photo-1464207687429-7505649dae38?w=800&h=600",
-    "https://images.unsplash.com/photo-1465495976277-4387d4b0e4a6?w=800&h=600",
+   
     "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=600",
     "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&h=600",
     "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&h=600",

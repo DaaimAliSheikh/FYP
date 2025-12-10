@@ -2,10 +2,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "@/services/api";
 
 const initialState = {
-  user: JSON.parse(localStorage.getItem("user")) || null,
-  isAuthenticated: !!localStorage.getItem("user"),
-  loading: false,
+  user: null,
+  isAuthenticated: false,
+  loading: true, // Start with loading true to check auth on mount
   error: null,
+  initialized: false, // Track if we've checked auth status
 };
 
 export const signupUser = createAsyncThunk(
@@ -61,6 +62,25 @@ export const getCurrentUser = createAsyncThunk(
   }
 );
 
+// Initialize auth - check if user is authenticated on app load
+export const initializeAuth = createAsyncThunk(
+  "auth/initialize",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/users/me");
+      return response.data;
+    } catch (error) {
+      // If 401, user is not authenticated - this is expected, not an error
+      if (error.response?.status === 401) {
+        return rejectWithValue(null);
+      }
+      return rejectWithValue(
+        error.response?.data?.detail || "Failed to initialize auth"
+      );
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -71,20 +91,37 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Initialize auth
+      .addCase(initializeAuth.pending, (state) => {
+        state.loading = true;
+        state.initialized = false;
+      })
+      .addCase(initializeAuth.fulfilled, (state, action) => {
+        state.loading = false;
+        state.initialized = true;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+      })
+      .addCase(initializeAuth.rejected, (state) => {
+        state.loading = false;
+        state.initialized = true;
+        state.user = null;
+        state.isAuthenticated = false;
+      })
+      // Signup
       .addCase(signupUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(signupUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
-        state.isAuthenticated = true;
-        localStorage.setItem("user", JSON.stringify(action.payload));
+        // Don't auto-login on signup (email verification required)
       })
       .addCase(signupUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
+      // Login
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -93,27 +130,25 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
-        localStorage.setItem("user", JSON.stringify(action.payload));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
+      // Logout
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.isAuthenticated = false;
         state.loading = false;
-        localStorage.removeItem("user");
       })
+      // Get current user
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
-        localStorage.setItem("user", JSON.stringify(action.payload));
       })
       .addCase(getCurrentUser.rejected, (state) => {
         state.user = null;
         state.isAuthenticated = false;
-        localStorage.removeItem("user");
       });
   },
 });

@@ -1,11 +1,15 @@
+import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { initializeAuth } from "./store/slices/authSlice";
+import { CircularProgress, Box } from "@mui/material";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 import HomePage from "./pages/HomePage";
+import VenueDetailPage from "./pages/VenueDetailPage";
 import BookingsPage from "./pages/BookingsPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -27,9 +31,26 @@ import VenuesManagementPage from "./pages/vendor/VenuesManagementPage";
 import CarsManagementPage from "./pages/vendor/CarsManagementPage";
 import CateringsManagementPage from "./pages/vendor/CateringsManagementPage";
 import PhotographyManagementPage from "./pages/vendor/PhotographyManagementPage";
+import VendorEnquiriesPage from "./pages/vendor/VendorEnquiriesPage";
 
 function ProtectedRoute({ children, adminOnly = false, vendorOnly = false }) {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user, loading, initialized } = useSelector(
+    (state) => state.auth
+  );
+
+  // Show loading while checking authentication
+  if (!initialized || loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -47,7 +68,15 @@ function ProtectedRoute({ children, adminOnly = false, vendorOnly = false }) {
 }
 
 function App() {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { isAuthenticated, user, loading, initialized } = useSelector(
+    (state) => state.auth
+  );
+
+  // Initialize auth on app mount
+  useEffect(() => {
+    dispatch(initializeAuth());
+  }, [dispatch]);
 
   const getDefaultRoute = () => {
     if (!isAuthenticated) return null;
@@ -57,6 +86,20 @@ function App() {
     }
     return "/";
   };
+
+  // Show loading spinner while initializing auth
+  if (!initialized || loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+      >
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
 
   return (
     <Routes>
@@ -82,6 +125,17 @@ function App() {
           <ProtectedRoute>
             <MainLayout>
               <HomePage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/venues/:id"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <VenueDetailPage />
             </MainLayout>
           </ProtectedRoute>
         }
@@ -171,6 +225,7 @@ function App() {
       >
         <Route path="bookings" element={<VendorBookingsPage />} />
         <Route path="venues" element={<VenuesManagementPage />} />
+        <Route path="enquiries" element={<VendorEnquiriesPage />} />
       </Route>
 
       <Route
@@ -183,6 +238,7 @@ function App() {
       >
         <Route path="bookings" element={<VendorBookingsPage />} />
         <Route path="cars" element={<CarsManagementPage />} />
+        <Route path="enquiries" element={<VendorEnquiriesPage />} />
       </Route>
 
       <Route
@@ -195,6 +251,7 @@ function App() {
       >
         <Route path="bookings" element={<VendorBookingsPage />} />
         <Route path="caterings" element={<CateringsManagementPage />} />
+        <Route path="enquiries" element={<VendorEnquiriesPage />} />
       </Route>
 
       <Route
@@ -207,6 +264,7 @@ function App() {
       >
         <Route path="bookings" element={<VendorBookingsPage />} />
         <Route path="photography" element={<PhotographyManagementPage />} />
+        <Route path="enquiries" element={<VendorEnquiriesPage />} />
       </Route>
     </Routes>
   );

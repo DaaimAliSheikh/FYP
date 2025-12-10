@@ -169,6 +169,41 @@ const bookingSchema = new mongoose.Schema({
 });
 bookingSchema.index({ venue_id: 1, booking_event_date: 1 }, { unique: true });
 
+const enquirySchema = new mongoose.Schema({
+  enquiry_name: { type: String, required: true, maxlength: 100 },
+  enquiry_email: { type: String, required: true, maxlength: 255 },
+  enquiry_phone: { type: String, required: true, maxlength: 20 },
+  enquiry_message: { type: String, required: true, maxlength: 2000 },
+  enquiry_status: {
+    type: String,
+    enum: ["open", "closed"],
+    default: "open",
+  },
+  enquiry_created_at: { type: Date, default: Date.now },
+  enquiry_closed_at: { type: Date, default: null },
+
+  // Vendor type and ID for reusability across all vendor categories
+  vendor_type: {
+    type: String,
+    enum: ["venue", "catering", "car_rental", "photography"],
+    required: true,
+  },
+  vendor_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
+
+  // Optional: User ID if submitted by logged in user
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+});
+
+// Index for efficient vendor enquiry queries
+enquirySchema.index({ vendor_type: 1, vendor_id: 1, enquiry_status: 1 });
+
 module.exports = {
   User: mongoose.model("User", userSchema),
   UserContact: mongoose.model("UserContact", userContactSchema),
@@ -183,4 +218,5 @@ module.exports = {
   CarReservation: mongoose.model("CarReservation", carReservationSchema),
   Payment: mongoose.model("Payment", paymentSchema),
   Booking: mongoose.model("Booking", bookingSchema),
+  Enquiry: mongoose.model("Enquiry", enquirySchema),
 };

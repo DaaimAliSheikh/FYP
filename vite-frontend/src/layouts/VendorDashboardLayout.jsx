@@ -26,6 +26,7 @@ import {
   Restaurant,
   CameraAlt,
   Logout,
+  QuestionAnswer,
 } from "@mui/icons-material";
 import { logoutUser } from "@/store/slices/authSlice";
 
@@ -37,6 +38,11 @@ const getMenuItemsForVendor = (vendorType) => {
       text: "Bookings",
       icon: <EventNote />,
       path: `/dashboard/${vendorType}/bookings`,
+    },
+    {
+      text: "Enquiries",
+      icon: <QuestionAnswer />,
+      path: `/dashboard/${vendorType}/enquiries`,
     },
   ];
 

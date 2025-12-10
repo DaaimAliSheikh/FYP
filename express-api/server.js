@@ -12,6 +12,7 @@ const photographyRoutes = require("./routes/photography");
 const carRoutes = require("./routes/cars");
 const promoRoutes = require("./routes/promos");
 const bookingRoutes = require("./routes/bookings");
+const enquiryRoutes = require("./routes/enquiries");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/photography", photographyRoutes);
 app.use("/cars", carRoutes);
 app.use("/promos", promoRoutes);
 app.use("/bookings", bookingRoutes);
+app.use("/enquiries", enquiryRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {

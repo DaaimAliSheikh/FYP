@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -22,6 +23,7 @@ import { fetchVenues } from "@/store/slices/venueSlice";
 
 export default function VenueCard({ venue, averageRating }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(1);
   const [comment, setComment] = useState("");
@@ -32,6 +34,10 @@ export default function VenueCard({ venue, averageRating }) {
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const handleCardClick = () => {
+    navigate(`/venues/${venue._id || venue.venue_id}`);
   };
 
   const handleSubmit = async (event) => {
@@ -67,7 +73,7 @@ export default function VenueCard({ venue, averageRating }) {
             bgcolor: "#f5f5f5",
           },
         }}
-        onClick={() => setOpen(true)}
+        onClick={handleCardClick}
       >
         <CardHeader title={venue.venue_name} />
         {venue.venue_image && (

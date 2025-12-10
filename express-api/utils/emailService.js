@@ -160,7 +160,148 @@ async function sendPasswordResetEmail(email, username, token) {
   }
 }
 
+/**
+ * Send enquiry notification email to vendor
+ * @param {string} vendorEmail - Vendor's email address
+ * @param {string} vendorName - Vendor/business name
+ * @param {string} customerName - Customer's name
+ * @param {string} customerEmail - Customer's email
+ * @param {string} customerPhone - Customer's phone
+ * @param {string} enquiryMessage - Enquiry message
+ * @param {string} vendorType - Type of vendor (venue, catering, etc.)
+ * @param {string} enquiryId - Enquiry ID
+ */
+async function sendEnquiryNotificationEmail(
+  vendorEmail,
+  vendorName,
+  customerName,
+  customerEmail,
+  customerPhone,
+  enquiryMessage,
+  vendorType,
+  enquiryId
+) {
+  const enquiriesUrl = `${config.CLIENT_BASE_URL}/dashboard/${vendorType}/enquiries`;
+
+  // Capitalize vendor type for display
+  const vendorTypeFormatted = vendorType
+    .replace("_", " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
+
+  const mailOptions = {
+    from: '"Wedding Event Management System" <daaimalisheikh23@gmail.com>',
+    to: vendorEmail,
+    subject: `New Enquiry for Your ${vendorTypeFormatted} Service`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #1976d2; color: white; padding: 20px; text-align: center; }
+            .content { background-color: #f9f9f9; padding: 30px; }
+            .enquiry-details { 
+              background-color: white; 
+              padding: 20px; 
+              border-radius: 8px; 
+              margin: 20px 0;
+              border-left: 4px solid #1976d2;
+            }
+            .customer-info { margin: 15px 0; }
+            .customer-info strong { color: #1976d2; }
+            .message-box { 
+              background-color: #f5f5f5; 
+              padding: 15px; 
+              border-radius: 5px; 
+              margin: 15px 0;
+              border: 1px solid #ddd;
+            }
+            .button { 
+              display: inline-block; 
+              padding: 12px 30px; 
+              background-color: #1976d2; 
+              color: white; 
+              text-decoration: none; 
+              border-radius: 5px; 
+              margin: 20px 0;
+            }
+            .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎉 New Customer Enquiry!</h1>
+            </div>
+            <div class="content">
+              <h2>Hi ${vendorName},</h2>
+              <p>You have received a new enquiry for your ${vendorTypeFormatted.toLowerCase()} service through our platform.</p>
+              
+              <div class="enquiry-details">
+                <h3>Customer Details:</h3>
+                <div class="customer-info">
+                  <strong>Name:</strong> ${customerName}<br>
+                  <strong>Email:</strong> ${customerEmail}<br>
+                  <strong>Phone:</strong> ${customerPhone}
+                </div>
+                
+                <h3>Enquiry Message:</h3>
+                <div class="message-box">
+                  "${enquiryMessage}"
+                </div>
+                
+                <p><strong>Enquiry ID:</strong> #${enquiryId
+                  .toString()
+                  .slice(-8)
+                  .toUpperCase()}</p>
+                <p><strong>Received:</strong> ${new Date().toLocaleDateString(
+                  "en-US",
+                  {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }
+                )}</p>
+              </div>
+              
+              <div style="text-align: center;">
+                <a href="${enquiriesUrl}" class="button" style="color: #fff;">View All Enquiries</a>
+              </div>
+              
+              <p>Please respond to the customer promptly to provide excellent service and grow your business.</p>
+              
+              <p><strong>Next Steps:</strong></p>
+              <ul>
+                <li>Log in to your dashboard to view the full enquiry</li>
+                <li>Contact the customer directly via phone or email</li>
+                <li>Mark the enquiry as closed once resolved</li>
+              </ul>
+              
+            </div>
+            <div class="footer">
+              <p>© 2025 Wedding Event Management System. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Enquiry notification email sent:", info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error("Error sending enquiry notification email:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   sendVerificationEmail,
   sendPasswordResetEmail,
+  sendEnquiryNotificationEmail,
 };

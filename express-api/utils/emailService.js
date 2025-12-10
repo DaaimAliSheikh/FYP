@@ -58,14 +58,14 @@ async function sendVerificationEmail(email, username, token) {
         <body>
           <div class="container">
             <div class="header">
-              <h1>Welcome to Event Management System!</h1>
+              <h1>Welcome to Wedding Event Management System!</h1>
             </div>
             <div class="content">
               <h2>Hi ${username},</h2>
               <p>Thank you for registering with us. Please verify your email address to complete your registration.</p>
               <p>Click the button below to verify your email:</p>
               <div style="text-align: center;">
-                <a href="${verificationUrl}" class="button text-white">Verify Email Address</a>
+                <a href="${verificationUrl}" class="button"  style="color: #fff;">Verify Email Address</a>
               </div>
               <p>Or copy and paste this link in your browser:</p>
               <p style="word-break: break-all; color: #1976d2;">${verificationUrl}</p>
@@ -73,7 +73,7 @@ async function sendVerificationEmail(email, username, token) {
               <p>If you didn't create an account, please ignore this email.</p>
             </div>
             <div class="footer">
-              <p>© 2025 Event Management System. All rights reserved.</p>
+              <p>© 2025 WeddingEvent Management System. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -101,7 +101,7 @@ async function sendPasswordResetEmail(email, username, token) {
   const resetUrl = `${config.CLIENT_BASE_URL}/reset-password?token=${token}`;
 
   const mailOptions = {
-    from: '"Event Management System" <daaimalisheikh23@gmail.com>',
+    from: '"Wedding Event Management System" <daaimalisheikh23@gmail.com>',
     to: email,
     subject: "Reset Your Password",
     html: `
@@ -134,7 +134,7 @@ async function sendPasswordResetEmail(email, username, token) {
               <h2>Hi ${username},</h2>
               <p>We received a request to reset your password. Click the button below to reset it:</p>
               <div style="text-align: center;">
-                <a href="${resetUrl}" class="button">Reset Password</a>
+                <a href="${resetUrl}" class="button" style="color: #fff;">Reset Password</a>
               </div>
               <p>Or copy and paste this link in your browser:</p>
               <p style="word-break: break-all; color: #d32f2f;">${resetUrl}</p>
@@ -142,7 +142,7 @@ async function sendPasswordResetEmail(email, username, token) {
               <p>If you didn't request a password reset, please ignore this email or contact support if you're concerned.</p>
             </div>
             <div class="footer">
-              <p>© 2025 Event Management System. All rights reserved.</p>
+              <p>© 2025 Wedding Event Management System. All rights reserved.</p>
             </div>
           </div>
         </body>

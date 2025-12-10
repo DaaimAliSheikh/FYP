@@ -9,7 +9,6 @@ const {
   User,
 } = require("../models");
 const { sendEnquiryNotificationEmail } = require("../utils/emailService");
-const { authMiddleware } = require("../middleware/auth");
 
 // Submit new enquiry
 router.post("/", async (req, res) => {
@@ -128,87 +127,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Get enquiries for a vendor by their user_id (with authentication)
-router.get("/vendor/:vendor_type", authMiddleware, async (req, res) => {
-  try {
-    const { vendor_type } = req.params;
-    const { status } = req.query;
-
-    // Validate vendor type
-    const validVendorTypes = ["venue", "catering", "car_rental", "photography"];
-    if (!validVendorTypes.includes(vendor_type)) {
-      return res.status(400).json({
-        detail: "Invalid vendor type",
-      });
-    }
-
-    // Check if user is authenticated
-    if (!req.user) {
-      return res.status(401).json({ detail: "Authentication required" });
-    }
-
-    // Find all vendor items belonging to this user
-    let vendorIds = [];
-
-    switch (vendor_type) {
-      case "venue":
-        const venues = await Venue.find({ user_id: req.user._id }).select(
-          "_id"
-        );
-        vendorIds = venues.map((v) => v._id);
-        break;
-      case "catering":
-        const caterings = await Catering.find({ user_id: req.user._id }).select(
-          "_id"
-        );
-        vendorIds = caterings.map((c) => c._id);
-        break;
-      case "car_rental":
-        const cars = await Car.find({ user_id: req.user._id }).select("_id");
-        vendorIds = cars.map((c) => c._id);
-        break;
-      case "photography":
-        const photos = await Photography.find({ user_id: req.user._id }).select(
-          "_id"
-        );
-        vendorIds = photos.map((p) => p._id);
-        break;
-    }
-
-    if (vendorIds.length === 0) {
-      return res.json({
-        enquiries: [],
-        total: 0,
-        message: "No vendor profiles found for this user",
-      });
-    }
-
-    // Build query
-    const query = {
-      vendor_type,
-      vendor_id: { $in: vendorIds },
-    };
-
-    // Add status filter if provided
-    if (status && ["open", "closed"].includes(status)) {
-      query.enquiry_status = status;
-    }
-
-    const enquiries = await Enquiry.find(query)
-      .populate("user_id", "username email")
-      .sort({ enquiry_created_at: -1 });
-
-    res.json({
-      enquiries,
-      total: enquiries.length,
-    });
-  } catch (error) {
-    console.error("Error fetching enquiries:", error);
-    res.status(500).json({ detail: "Internal server error" });
-  }
-});
-
-// Get enquiries for a specific vendor item (with authentication)
+// Get enquiries for a vendor (with authentication)
 router.get("/:vendor_type/:vendor_id", async (req, res) => {
   try {
     const { vendor_type, vendor_id } = req.params;
@@ -248,7 +167,7 @@ router.get("/:vendor_type/:vendor_id", async (req, res) => {
 });
 
 // Mark enquiry as closed
-router.patch("/:enquiry_id/close", authMiddleware, async (req, res) => {
+router.patch("/:enquiry_id/close", async (req, res) => {
   try {
     const { enquiry_id } = req.params;
 
@@ -285,7 +204,7 @@ router.patch("/:enquiry_id/close", authMiddleware, async (req, res) => {
 });
 
 // Mark enquiry as open (reopen)
-router.patch("/:enquiry_id/open", authMiddleware, async (req, res) => {
+router.patch("/:enquiry_id/open", async (req, res) => {
   try {
     const { enquiry_id } = req.params;
 

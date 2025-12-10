@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { initializeAuth } from "./store/slices/authSlice";
-import { CircularProgress, Box } from "@mui/material";
+import { getCurrentUser } from "./store/slices/authSlice";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
@@ -34,23 +33,7 @@ import PhotographyManagementPage from "./pages/vendor/PhotographyManagementPage"
 import VendorEnquiriesPage from "./pages/vendor/VendorEnquiriesPage";
 
 function ProtectedRoute({ children, adminOnly = false, vendorOnly = false }) {
-  const { isAuthenticated, user, loading, initialized } = useSelector(
-    (state) => state.auth
-  );
-
-  // Show loading while checking authentication
-  if (!initialized || loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -69,14 +52,14 @@ function ProtectedRoute({ children, adminOnly = false, vendorOnly = false }) {
 
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticated, user, loading, initialized } = useSelector(
-    (state) => state.auth
-  );
+  const { isAuthenticated, user, token } = useSelector((state) => state.auth);
 
-  // Initialize auth on app mount
+  // Fetch user on app initialization if token exists
   useEffect(() => {
-    dispatch(initializeAuth());
-  }, [dispatch]);
+    if (token && !user) {
+      dispatch(getCurrentUser());
+    }
+  }, [token, user, dispatch]);
 
   const getDefaultRoute = () => {
     if (!isAuthenticated) return null;
@@ -86,20 +69,6 @@ function App() {
     }
     return "/";
   };
-
-  // Show loading spinner while initializing auth
-  if (!initialized || loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <CircularProgress size={60} />
-      </Box>
-    );
-  }
 
   return (
     <Routes>

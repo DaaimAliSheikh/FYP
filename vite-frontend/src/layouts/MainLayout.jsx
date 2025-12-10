@@ -66,7 +66,7 @@ export default function Layout({ children }) {
           variant="h6"
           sx={{ fontFamily: "Dancing Script, cursive" }}
         >
-          SHAADI.COM
+         ASAAN SHAADI
         </Typography>
       </Toolbar>
       <List>
@@ -131,7 +131,7 @@ export default function Layout({ children }) {
               fontSize: "1.5rem",
             }}
           >
-            SHAADI.COM
+            ASAAN SHAADI
             <Chip
               sx={{ ml: 2 }}
               color="primary"

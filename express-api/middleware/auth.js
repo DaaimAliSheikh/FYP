@@ -3,7 +3,13 @@ const { verifyToken } = require("../utils/auth");
 
 const authMiddleware = async (req, res, next) => {
   try {
-    const token = req.cookies.access_token;
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ detail: "Not authenticated" });
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     if (!token) {
       return res.status(401).json({ detail: "Not authenticated" });
     }

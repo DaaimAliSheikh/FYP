@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const cookieParser = require("cookie-parser");
 const path = require("path");
 const connectDB = require("./config/db");
 const config = require("./config/env");
@@ -23,12 +22,11 @@ connectDB();
 app.use(
   cors({
     origin: config.CLIENT_BASE_URL,
-    credentials: true,
+    credentials: false, // No longer using cookies
   })
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 
 // Serve static images
 app.use("/images", express.static(path.join(__dirname, "images")));

@@ -2,11 +2,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "@/services/api";
 
 const initialState = {
-  user: null,
-  isAuthenticated: false,
-  loading: true, // Start with loading true to check auth on mount
+  user: JSON.parse(localStorage.getItem("user")) || null,
+  token: localStorage.getItem("token") || null,
+  isAuthenticated: !!localStorage.getItem("token"),
+  loading: false,
   error: null,
-  initialized: false, // Track if we've checked auth status
 };
 
 export const signupUser = createAsyncThunk(
@@ -26,6 +26,10 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await api.post("/users/login", credentials);
+      // Store token in localStorage
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+      }
       return response.data;
     } catch (error) {
       // Return the full error data including code for special handling
@@ -40,9 +44,15 @@ export const logoutUser = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      await api.get("/users/logout");
+      await api.post("/users/logout");
+      // Clear token and user from localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       return null;
     } catch (error) {
+      // Even if logout fails on server, clear local storage
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       return rejectWithValue(error.response?.data?.detail || "Logout failed");
     }
   }
@@ -62,25 +72,6 @@ export const getCurrentUser = createAsyncThunk(
   }
 );
 
-// Initialize auth - check if user is authenticated on app load
-export const initializeAuth = createAsyncThunk(
-  "auth/initialize",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await api.get("/users/me");
-      return response.data;
-    } catch (error) {
-      // If 401, user is not authenticated - this is expected, not an error
-      if (error.response?.status === 401) {
-        return rejectWithValue(null);
-      }
-      return rejectWithValue(
-        error.response?.data?.detail || "Failed to initialize auth"
-      );
-    }
-  }
-);
-
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -91,64 +82,59 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Initialize auth
-      .addCase(initializeAuth.pending, (state) => {
-        state.loading = true;
-        state.initialized = false;
-      })
-      .addCase(initializeAuth.fulfilled, (state, action) => {
-        state.loading = false;
-        state.initialized = true;
-        state.user = action.payload;
-        state.isAuthenticated = true;
-      })
-      .addCase(initializeAuth.rejected, (state) => {
-        state.loading = false;
-        state.initialized = true;
-        state.user = null;
-        state.isAuthenticated = false;
-      })
-      // Signup
       .addCase(signupUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(signupUser.fulfilled, (state, action) => {
         state.loading = false;
-        // Don't auto-login on signup (email verification required)
+        // Signup doesn't return token, user needs to verify email first
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
       })
       .addCase(signupUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      // Login
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.token = action.payload.token;
+        state.user = action.payload.user;
         state.isAuthenticated = true;
+        localStorage.setItem("token", action.payload.token);
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
-      // Logout
-      .addCase(logoutUser.fulfilled, (state) => {
+        state.token = null;
         state.user = null;
         state.isAuthenticated = false;
-        state.loading = false;
       })
-      // Get current user
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.loading = false;
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
+        localStorage.setItem("user", JSON.stringify(action.payload));
       })
       .addCase(getCurrentUser.rejected, (state) => {
         state.user = null;
+        state.token = null;
         state.isAuthenticated = false;
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
       });
   },
 });

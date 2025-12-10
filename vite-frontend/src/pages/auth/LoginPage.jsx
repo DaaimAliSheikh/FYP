@@ -62,7 +62,7 @@ export default function LoginPage() {
     if (Object.keys(errors).length === 0) {
       const result = await dispatch(loginUser(formData));
       if (loginUser.fulfilled.match(result)) {
-        const user = result.payload;
+        const user = result.payload.user;
         if (user.is_admin) {
           navigate("/dashboard");
         } else if (user.role === "vendor") {
@@ -80,13 +80,12 @@ export default function LoginPage() {
           setSnackbarSeverity("warning");
           setResendEmail(formData.email);
           setShowResendDialog(true);
+          setOpenSnackbar(true);
         } else {
-          setSnackbarMessage(
-            error || errorData?.detail || "Invalid credentials"
-          );
+          setSnackbarMessage(errorData?.detail || "Invalid credentials");
           setSnackbarSeverity("error");
+          setOpenSnackbar(true);
         }
-        setOpenSnackbar(true);
       }
     }
   };
@@ -101,6 +100,7 @@ export default function LoginPage() {
       setSnackbarSeverity("success");
       setOpenSnackbar(true);
       setShowResendDialog(false);
+      setResendEmail(""); // Clear the email after successful resend
     } catch (error) {
       setSnackbarMessage(
         error.response?.data?.detail || "Failed to resend verification email"
@@ -110,6 +110,11 @@ export default function LoginPage() {
     } finally {
       setResendLoading(false);
     }
+  };
+
+  const handleCloseResendDialog = () => {
+    setShowResendDialog(false);
+    setResendEmail(""); // Clear the email when dialog is closed
   };
 
   const handleChange = (e) => {
@@ -126,7 +131,7 @@ export default function LoginPage() {
         color="primary"
         sx={{ textAlign: "center", fontFamily: "Dancing Script, cursive" }}
       >
-        SHAADI.COM
+        ASAAN SHAADI
       </Typography>
 
       <Stack spacing={1}>
@@ -227,10 +232,7 @@ export default function LoginPage() {
         </Alert>
       </Snackbar>
 
-      <Dialog
-        open={showResendDialog}
-        onClose={() => setShowResendDialog(false)}
-      >
+      <Dialog open={showResendDialog} onClose={handleCloseResendDialog}>
         <DialogTitle>Email Not Verified</DialogTitle>
         <DialogContent>
           <Typography>
@@ -239,7 +241,7 @@ export default function LoginPage() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowResendDialog(false)}>Cancel</Button>
+          <Button onClick={handleCloseResendDialog}>Cancel</Button>
           <Button
             onClick={handleResendVerification}
             variant="contained"

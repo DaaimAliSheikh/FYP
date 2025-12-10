@@ -70,19 +70,56 @@ export default function VendorEnquiriesPage() {
     setError("");
 
     try {
-      // Fetch enquiries for all vendor items belonging to this user
-      const response = await api.get(`/enquiries/vendor/${vendorType}`);
-      setEnquiries(response.data.enquiries || []);
+      // For this example, we'll fetch all venues for this user to get the vendor ID
+      // In a real scenario, you might store the vendor ID in the user profile
+      let vendorId = null;
 
-      if (response.data.message) {
-        setError(response.data.message);
+      switch (vendorType) {
+        case "venue":
+          const venuesResponse = await api.get("/venues");
+          const userVenues =
+            venuesResponse.data.venues?.filter((v) => v.user_id === user._id) ||
+            [];
+          if (userVenues.length > 0) vendorId = userVenues[0]._id;
+          break;
+        case "catering":
+          const cateringsResponse = await api.get("/caterings");
+          const userCaterings =
+            cateringsResponse.data.caterings?.filter(
+              (c) => c.user_id === user._id
+            ) || [];
+          if (userCaterings.length > 0) vendorId = userCaterings[0]._id;
+          break;
+        case "car_rental":
+          const carsResponse = await api.get("/cars");
+          const userCars =
+            carsResponse.data.cars?.filter((c) => c.user_id === user._id) || [];
+          if (userCars.length > 0) vendorId = userCars[0]._id;
+          break;
+        case "photography":
+          const photosResponse = await api.get("/photography");
+          const userPhotos =
+            photosResponse.data.photography?.filter(
+              (p) => p.user_id === user._id
+            ) || [];
+          if (userPhotos.length > 0) vendorId = userPhotos[0]._id;
+          break;
       }
+
+      if (!vendorId) {
+        setError(
+          "No vendor profile found. Please create your business profile first."
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Fetch enquiries for this vendor
+      const response = await api.get(`/enquiries/${vendorType}/${vendorId}`);
+      setEnquiries(response.data.enquiries || []);
     } catch (error) {
       console.error("Error fetching enquiries:", error);
-      setError(
-        error.response?.data?.detail ||
-          "Failed to load enquiries. Please try again."
-      );
+      setError("Failed to load enquiries. Please try again.");
     } finally {
       setLoading(false);
     }

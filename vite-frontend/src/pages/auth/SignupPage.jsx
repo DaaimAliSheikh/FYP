@@ -113,7 +113,7 @@ export default function SignupPage() {
           color="primary"
           sx={{ textAlign: "center", fontFamily: "Dancing Script, cursive" }}
         >
-          SHAADI.COM
+          ASAAN SHAADI
         </Typography>
         <Typography variant="h4">Sign up</Typography>
         <Typography color="text.secondary" variant="body2">

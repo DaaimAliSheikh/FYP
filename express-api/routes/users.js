@@ -126,19 +126,17 @@ router.post("/login", async (req, res) => {
     }
 
     const token = createAccessToken(user._id);
-    res.cookie("access_token", token, {
-      httpOnly: true,
-      maxAge: parseInt(config.ACCESS_TOKEN_EXPIRY) * 1000,
-      sameSite: "lax",
-    });
 
     res.json({
-      user_id: user._id,
-      username: user.username,
-      email: user.email,
-      is_admin: user.is_admin,
-      role: user.role,
-      vendor_type: user.vendor_type,
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        is_admin: user.is_admin,
+        role: user.role,
+        vendor_type: user.vendor_type,
+      },
     });
   } catch (error) {
     res.status(500).json({ detail: error.message });
@@ -146,8 +144,8 @@ router.post("/login", async (req, res) => {
 });
 
 // Logout
-router.get("/logout", authMiddleware, (req, res) => {
-  res.clearCookie("access_token");
+router.post("/logout", authMiddleware, (req, res) => {
+  // With token-based auth, logout is handled on the client by removing the token
   res.json({ detail: "Successfully logged out" });
 });
 
